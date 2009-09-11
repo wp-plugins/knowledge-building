@@ -1,0 +1,26 @@
+/* Style definition for knowledge building. */
+
+div.kbtype-label {
+    font-size: 150%;
+}
+
+/* These color definitions are needed by exported KB typesets from Fle3. */
+.tt_yellow { background-color: #FFD700 }
+.tt_yellowlt { background-color: #ffff99 }
+.tt_orange { background-color: #FF8C00 }
+.tt_orangelt { background-color: #ffd995 }
+.tt_red { background-color: #F95050 }
+.tt_pink { background-color: #ebb5bc }
+.tt_purple { background-color: #d3bdff }
+.tt_blue { background-color: #778ECF }
+.tt_bluelt { background-color: #b4c7ff }
+.tt_aqua { background-color: #b6dbcb }
+.tt_green { background-color: #67CA67 }
+.tt_greenlt { background-color: #d3fb7e }
+.tt_gray { background-color: #A9A9A9 }
+.tt_white { background-color: #FFFFFF }
+
+.ktype_heading {
+    font-size: 150%;
+    padding: 0.3em;
+}
