@@ -20,7 +20,7 @@ This section describes how to install the plugin and get it working.
 
 1. Store the plugin into the `/wp-content/plugins/knowledgebuilding/` directory.
 1. Activate the plugin through the 'Plugins' menu in Wordpress.
-1. Edit the 'Comments' template and change 'wp_comment_list' to 'knbu_comment_list'.
+1. Edit the 'Comments' template and change `wp_comment_list` to `knbu_comment_list`.
 1. Go to Settings, Knowledge Building and select which post Categories should have Knowledge Building enabled.
 
 Please note that since this plugin relies heavily on the commenting feature, not all themes will work nicely. Specifically, this plugin works best with themes that use the Wordpress built-in comment Walker. You can detect this by checking whether or not your comments.php template has a call to 'wp_comment_list' or not. If it does not, then it has its own custom way of showing comments, which this plugin cannot easily work with. You can either select another theme which uses Wordpress Walker, or just try and replace the code in comments.php that displays comments with a call to `knbu_comment_list();` and cross your fingers. :-)

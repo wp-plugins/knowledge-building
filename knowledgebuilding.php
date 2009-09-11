@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: Knowledge Building
-Plugin URI: http://fle4.uiah.fi/wp-kb-plugin
+Plugin URI: http://fle4.uiah.fi/kb-wp-plugin
 Description: Allows knowledge building processes in the comments of posts.
 Version: 0.2
 Author: Tarmo Toikkanen
