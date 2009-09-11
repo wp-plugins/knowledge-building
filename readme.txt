@@ -4,7 +4,7 @@ Donate link: http://fle4.uiah.fi/
 Tags: education, learning, knowledge building, progressive inquiry, comments
 Requires at least: 2.7
 Tested up to: 2.8.4
-Stable tag: /trunk/
+Stable tag: 0.2
 
 This plugin enables comments to have knowledge types and facilitates knowledge building on Wordpress.
 
