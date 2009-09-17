@@ -4,7 +4,7 @@ Donate link: http://fle4.uiah.fi/
 Tags: education, learning, knowledge building, progressive inquiry, comments
 Requires at least: 2.7
 Tested up to: 2.8.4
-Stable tag: 0.2
+Stable tag: 0.3
 
 This plugin enables comments to have knowledge types and facilitates knowledge building on Wordpress.
 
@@ -40,6 +40,10 @@ Either copy an existing typeset's XML file to a new name, and edit it to your li
 1. Demonstration of the progressive inquiry knowledge typeset in use on Wordpress.
 
 == Changelog ==
+
+= 0.3 =
+* Modified colors to be less intensive.
+* Otherwise everything seems to be working smoothly.
 
 = 0.2 =
 * Beta release. Main functionality is done, and seems to be working.
