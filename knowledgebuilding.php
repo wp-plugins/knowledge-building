@@ -35,12 +35,13 @@ $knbu_kbsets = wp_cache_get('knbu_kbsets');
 if ( $knbu_kbsets == false ) {
 	$knbu_kbsets = array();
 # Read available KBset xml files into memory
-	$d = dir(WP_PLUGIN_DIR . "/knowledgebuilding/kbsets");
+	$kbset_dir = WP_PLUGIN_DIR.DIRECTORY_SEPARATOR."knowledgebuilding".DIRECTORY_SEPARATOR."kbsets");
+	$d = dir($kbset_dir);
 	while ( false != ($entry = $d->read()) ) {
 		if ( ereg('\.xml$',strtolower($entry)) ) {
 			$fname = explode('.',$entry);
 			$fname = $fname[0];
-			$knbu_kbsets[$fname]=simplexml_load_file(WP_PLUGIN_DIR . "/knowledgebuilding/kbsets/" . $entry);
+			$knbu_kbsets[$fname]=simplexml_load_file($kbset_dir.DIRECTORY_SEPARATOR.$entry);
 		}
 	}
 	wp_cache_set('knbu_kbsets',$knbu_kbsets);
@@ -63,7 +64,7 @@ function knbu_install() {
       comment_id BIGINT NOT NULL,
       kbtype tinytext NOT NULL,
       PRIMARY KEY  ( comment_id ));";
-		require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+		require_once(ABSPATH . 'wp-admin'.DIRECTORY_SEPARATOR.'includes'.DIRECTORY_SEPARATOR.'upgrade.php');
 		dbDelta($sql);
 		add_option('knbu_db_version', $knbu_db_version);
 	}
