@@ -35,7 +35,7 @@ $knbu_kbsets = wp_cache_get('knbu_kbsets');
 if ( $knbu_kbsets == false ) {
 	$knbu_kbsets = array();
 # Read available KBset xml files into memory
-	$kbset_dir = WP_PLUGIN_DIR.DIRECTORY_SEPARATOR."knowledgebuilding".DIRECTORY_SEPARATOR."kbsets");
+	$kbset_dir = WP_PLUGIN_DIR.DIRECTORY_SEPARATOR."knowledgebuilding".DIRECTORY_SEPARATOR."kbsets";
 	$d = dir($kbset_dir);
 	while ( false != ($entry = $d->read()) ) {
 		if ( ereg('\.xml$',strtolower($entry)) ) {
