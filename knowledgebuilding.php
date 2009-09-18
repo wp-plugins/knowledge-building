@@ -3,7 +3,7 @@
 Plugin Name: Knowledge Building
 Plugin URI: http://fle4.uiah.fi/kb-wp-plugin
 Description: Allows knowledge building processes in the comments of posts.
-Version: 0.3
+Version: 0.4
 Author: Tarmo Toikkanen
 Author URI: http://tarmo.fi
 */
@@ -35,7 +35,7 @@ $knbu_kbsets = wp_cache_get('knbu_kbsets');
 if ( $knbu_kbsets == false ) {
 	$knbu_kbsets = array();
 # Read available KBset xml files into memory
-	$kbset_dir = WP_PLUGIN_DIR.DIRECTORY_SEPARATOR."knowledgebuilding".DIRECTORY_SEPARATOR."kbsets");
+	$kbset_dir = WP_PLUGIN_DIR.DIRECTORY_SEPARATOR."knowledge-building".DIRECTORY_SEPARATOR."kbsets";
 	$d = dir($kbset_dir);
 	while ( false != ($entry = $d->read()) ) {
 		if ( ereg('\.xml$',strtolower($entry)) ) {
@@ -342,12 +342,12 @@ add_action('wp_print_styles', 'knbu_custom_stylesheet');
  * Hooked to wp_print_styles action.
  */
 function knbu_custom_stylesheet() {
-	$myStyleUrl = WP_PLUGIN_URL . '/knowledgebuilding/style.css';
-	$myStyleFile = WP_PLUGIN_DIR . '/knowledgebuilding/style.css';
+	$myStyleUrl = WP_PLUGIN_URL . '/knowledge-building/style.css';
+	$myStyleFile = WP_PLUGIN_DIR . '/knowledge-building/style.css';
 	if ( file_exists($myStyleFile) ) {
 		wp_enqueue_style( 'myStyleSheets', $myStyleUrl);
 	}
-	wp_enqueue_style('jquery-simpledialog', WP_PLUGIN_URL . '/knowledgebuilding/jquery.simpledialog/simpledialog.css');
+	wp_enqueue_style('jquery-simpledialog', WP_PLUGIN_URL . '/knowledge-building/jquery.simpledialog/simpledialog.css');
 }
 
 add_action('wp_print_scripts', 'knbu_script_load');
@@ -358,8 +358,8 @@ add_action('wp_print_scripts', 'knbu_script_load');
  */
 function knbu_script_load() {
 	if ( comments_open() && ( is_single() || is_page() ) ) {
-		wp_enqueue_script('jquery-simpledialog', WP_PLUGIN_URL . '/knowledgebuilding/jquery.simpledialog/simpledialog.js', array('jquery'));
-		wp_enqueue_script('knbu', WP_PLUGIN_URL . '/knowledgebuilding/knowledgebuilding.js', array('jquery','jquery-color') );
+		wp_enqueue_script('jquery-simpledialog', WP_PLUGIN_URL . '/knowledge-building/jquery.simpledialog/simpledialog.js', array('jquery'));
+		wp_enqueue_script('knbu', WP_PLUGIN_URL . '/knowledge-building/knowledgebuilding.js', array('jquery','jquery-color') );
 	}
 }
 
