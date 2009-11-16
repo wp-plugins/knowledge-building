@@ -261,6 +261,18 @@ function knbu_fetch_ktypes($comments, $post_id) {
 function knbu_list_comments($args = array(), $comments = null) {
 	global $wp_query;
 
+?>
+<div id="comment_sorter">
+Show notes
+<ul>
+<li>as thread</li>
+<li>by knowledge type</li>
+<li>by person</li>
+<li>by date</li>
+</ul>
+</div>
+<?php
+
 	$kbtype = knbu_get_kbset_for_post();
 	if ( !$kbtype ) {
 		wp_list_comments();
