@@ -24,3 +24,17 @@ div.kbtype-label {
     font-size: 150%;
     padding: 0.3em;
 }
+
+#comment_sorter ul {
+  display: inline;
+  margin: 0;
+  padding: 0.5em;
+}
+
+ #comment_sorter li { 
+  display: inline;
+  margin: 0.1em;
+  padding: 0.5em;
+  color: black;
+  background-color: #888;
+}

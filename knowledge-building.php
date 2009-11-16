@@ -3,7 +3,7 @@
 Plugin Name: Knowledge Building
 Plugin URI: http://fle4.uiah.fi/kb-wp-plugin
 Description: Allows knowledge building processes in the comments of posts.
-Version: 0.4
+Version: 0.5
 Author: Tarmo Toikkanen
 Author URI: http://tarmo.fi
 */
@@ -64,6 +64,7 @@ function knbu_install() {
       comment_id BIGINT NOT NULL,
       kbtype tinytext NOT NULL,
       PRIMARY KEY  ( comment_id ));";
+		print "REINSTALLING KNBU TABLE";
 		require_once(ABSPATH . 'wp-admin'.DIRECTORY_SEPARATOR.'includes'.DIRECTORY_SEPARATOR.'upgrade.php');
 		dbDelta($sql);
 		add_option('knbu_db_version', $knbu_db_version);
@@ -78,6 +79,8 @@ add_action('admin_menu', 'knbu_plugin_menu');
  */
 function knbu_plugin_menu() {
 	add_options_page('Knowledge Building Plugin Options', 'Knowledge Building', 8, __FILE__, 'knbu_plugin_options');
+	// Temporarily added installation hook here, since register_activation_hook doesn't work properly
+	knbu_install();
 }
 
 /**
@@ -257,6 +260,18 @@ function knbu_fetch_ktypes($comments, $post_id) {
  */
 function knbu_list_comments($args = array(), $comments = null) {
 	global $wp_query;
+
+?>
+<div id="comment_sorter">
+Show notes
+<ul>
+<li>as thread</li>
+<li>by knowledge type</li>
+<li>by person</li>
+<li>by date</li>
+</ul>
+</div>
+<?php
 
 	$kbtype = knbu_get_kbset_for_post();
 	if ( !$kbtype ) {
