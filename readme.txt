@@ -18,7 +18,7 @@ This plugin uses the JQuery javascript library, and the jquery.simpledialog plug
 
 This section describes how to install the plugin and get it working.
 
-1. Store the plugin into the `/wp-content/plugins/knowledgebuilding/` directory.
+1. Store the plugin into the `/wp-content/plugins/knowledge-building/` directory (basically just unzip the contents of the file into /wp-content/plugins).
 1. Activate the plugin through the 'Plugins' menu in Wordpress.
 1. Edit the 'Comments' template and change `wp_comment_list` to `knbu_comment_list`.
 1. Go to Settings, Knowledge Building and select which post Categories should have Knowledge Building enabled.
