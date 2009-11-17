@@ -64,7 +64,6 @@ function knbu_install() {
       comment_id BIGINT NOT NULL,
       kbtype tinytext NOT NULL,
       PRIMARY KEY  ( comment_id ));";
-		print "REINSTALLING KNBU TABLE";
 		require_once(ABSPATH . 'wp-admin'.DIRECTORY_SEPARATOR.'includes'.DIRECTORY_SEPARATOR.'upgrade.php');
 		dbDelta($sql);
 		add_option('knbu_db_version', $knbu_db_version);
