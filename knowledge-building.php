@@ -25,6 +25,7 @@ Author URI: http://tarmo.fi
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
+global $knbu_db_version;
 $knbu_db_version='0.12';
 
 /*
@@ -64,7 +65,6 @@ function knbu_install() {
       comment_id BIGINT NOT NULL,
       kbtype tinytext NOT NULL,
       PRIMARY KEY  ( comment_id ));";
-		print "REINSTALLING KNBU TABLE";
 		require_once(ABSPATH . 'wp-admin'.DIRECTORY_SEPARATOR.'includes'.DIRECTORY_SEPARATOR.'upgrade.php');
 		dbDelta($sql);
 		add_option('knbu_db_version', $knbu_db_version);

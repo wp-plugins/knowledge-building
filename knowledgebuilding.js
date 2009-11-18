@@ -5,6 +5,8 @@ $j = jQuery.noConflict();
 var ktype_changed=false;
 var ktype_color="";
 var orig_comments="";
+var cur_sort="";
+var sort_order=1;
 
 function knbu_disable() {
  $j("#comment").fadeTo(0,0.33);
@@ -101,23 +103,24 @@ $j(document).ready(function() {
        window.location.reload(); /* No easy way to restore threaded information */
        return;
      } else {
+	   if ( cur_sort = $target.html() ) sort_order=sort_order*-1; else sort_order=1;
        if ($target.html()=="by date") {
          coms.sort(function(a,b) {
            var ca = $j(a).find(".commentmetadata a:first-child").html();
            var cb = $j(b).find(".commentmetadata a:first-child").html();
-           return (ca < cb) ? -1: (ca > cb) ? 1 : 0;
+           return (ca < cb) ? -1*sort_order: (ca > cb) ? 1*sort_order : 0;
          });
        } else if ($target.html()=="by person") {
          coms.sort(function(a,b) {
            var ca = $j(a).find(".comment-author cite.fn").text().toLowerCase();
            var cb = $j(b).find(".comment-author cite.fn").text().toLowerCase();
-           return (ca < cb) ? -1: (ca > cb) ? 1 : 0;
+           return (ca < cb) ? -1*sort_order: (ca > cb) ? 1*sort_order : 0;
          });
        } else if ($target.html()=="by knowledge type") {
          coms.sort(function(a,b) {
            var ca = $j(a).find(".kbtype-label").html();
            var cb = $j(b).find(".kbtype-label").html();
-           return (ca < cb) ? -1: (ca > cb) ? 1 : 0;
+           return (ca < cb) ? -1*sort_order: (ca > cb) ? 1*sort_order : 0;
          });
        }
        $j.each(coms,function(idx,itm) { $j(".commentlist").append(itm); });
@@ -125,6 +128,7 @@ $j(document).ready(function() {
      $j("#comment_sorter li").css("font-weight","normal");
      $target.css("font-weight","bold");
      $coms.fadeIn("slow");
+     cur_sort=$target.html();
    });
  });
 
