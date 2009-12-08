@@ -4,6 +4,9 @@ $j = jQuery.noConflict();
 
 var ktype_changed=false;
 var ktype_color="";
+var orig_comments="";
+var cur_sort="";
+var sort_order=1;
 
 function knbu_disable() {
  $j("#comment").fadeTo(0,0.33);
@@ -82,5 +85,59 @@ $j(document).ready(function() {
  });
 
  $j("#knbu_popper").simpleDialog();
+
+ //orig_comments = $j(".commentlist").clone(); 
+
+
+ $j("#comment_sorter li").click(function(e) {
+   e.preventDefault();
+   var $target = $j(e.target);
+   var $jlist = $j(".commentlist");
+   var $coms = $jlist.find("li.comment");
+   var coms = $coms.get();
+   var doOnce = 0;
+   console.time('total');
+   $coms.fadeOut("fast",function() {
+	   if (!doOnce) doOnce=1; else return;
+	   console.time('sort');
+     if ($target.html()=="as thread") {
+       //$jlist.remove("li.comment");
+	   //$jlist.replaceWith(orig_comments.clone());
+	   //$jlist.after(orig_comments);
+       window.location.reload(); /* No easy way to restore threaded information */
+       return;
+     } else {
+	   if ( cur_sort = $target.html() ) sort_order=sort_order*-1; else sort_order=1;
+       if ($target.html()=="by date") {
+         coms.sort(function(a,b) {
+           var ca = $j(a).find(".commentmetadata a:first-child").html();
+           var cb = $j(b).find(".commentmetadata a:first-child").html();
+           return (ca < cb) ? -1*sort_order: (ca > cb) ? 1*sort_order : 0;
+         });
+       } else if ($target.html()=="by person") {
+         coms.sort(function(a,b) {
+           var ca = $j(a).find(".comment-author cite.fn").text().toLowerCase();
+           var cb = $j(b).find(".comment-author cite.fn").text().toLowerCase();
+           return (ca < cb) ? -1*sort_order: (ca > cb) ? 1*sort_order : 0;
+         });
+       } else if ($target.html()=="by knowledge type") {
+         coms.sort(function(a,b) {
+           var ca = $j(a).find(".kbtype-label").html();
+           var cb = $j(b).find(".kbtype-label").html();
+           return (ca < cb) ? -1*sort_order: (ca > cb) ? 1*sort_order : 0;
+         });
+       }
+       console.timeEnd('sort');
+       console.time('append');
+       $j.each(coms,function(idx,itm) { $j(".commentlist").append(itm); });
+       console.timeEnd('append');
+     }
+     $j("#comment_sorter li").css("font-weight","normal");
+     $target.css("font-weight","bold");
+     $coms.fadeIn("slow");
+     cur_sort=$target.html();
+   });
+   console.timeEnd('total');
+ });
 
 });
