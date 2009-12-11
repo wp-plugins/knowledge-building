@@ -96,10 +96,8 @@ $j(document).ready(function() {
    var $coms = $jlist.find("li.comment");
    var coms = $coms.get();
    var doOnce = 0;
-   console.time('total');
    $coms.fadeOut("fast",function() {
 	   if (!doOnce) doOnce=1; else return;
-	   console.time('sort');
      if ($target.html()=="as thread") {
        //$jlist.remove("li.comment");
 	   //$jlist.replaceWith(orig_comments.clone());
@@ -127,17 +125,13 @@ $j(document).ready(function() {
            return (ca < cb) ? -1*sort_order: (ca > cb) ? 1*sort_order : 0;
          });
        }
-       console.timeEnd('sort');
-       console.time('append');
        $j.each(coms,function(idx,itm) { $j(".commentlist").append(itm); });
-       console.timeEnd('append');
      }
      $j("#comment_sorter li").css("font-weight","normal");
      $target.css("font-weight","bold");
      $coms.fadeIn("slow");
      cur_sort=$target.html();
    });
-   console.timeEnd('total');
  });
 
 });
