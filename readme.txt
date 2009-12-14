@@ -1,10 +1,10 @@
-=== Knowledge Building ===
+ ===
 Contributors: tatti
 Donate link: http://fle4.uiah.fi/
 Tags: education, learning, knowledge building, progressive inquiry, comments
 Requires at least: 2.7
 Tested up to: 2.8.4
-Stable tag: 0.4
+Stable tag: 0.5.2
 
 This plugin enables comments to have knowledge types and facilitates knowledge building on Wordpress.
 
@@ -18,7 +18,7 @@ This plugin uses the JQuery javascript library, and the jquery.simpledialog plug
 
 This section describes how to install the plugin and get it working.
 
-1. Store the plugin into the `/wp-content/plugins/knowledgebuilding/` directory.
+1. Store the plugin into the `/wp-content/plugins/knowledge-building/` directory (basically just unzip the contents of the file into /wp-content/plugins).
 1. Activate the plugin through the 'Plugins' menu in Wordpress.
 1. Edit the 'Comments' template and change `wp_comment_list` to `knbu_comment_list`.
 1. Go to Settings, Knowledge Building and select which post Categories should have Knowledge Building enabled.
@@ -40,6 +40,16 @@ Either copy an existing typeset's XML file to a new name, and edit it to your li
 1. Demonstration of the progressive inquiry knowledge typeset in use on Wordpress.
 
 == Changelog ==
+
+=0.5.2=
+* Debug messages removed (broke sorting on IE).
+
+=0.5.1=
+* Speed optimization to comment sorting.
+
+=0.5=
+* Quick fix for database initialization
+* Basic support for sorting of comments.
 
 = 0.4 =
 * Corrected path dependency to math the installation path given by the Wordpress Plugin Directory.
