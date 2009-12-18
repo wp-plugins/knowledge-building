@@ -6,7 +6,7 @@ Requires at least: 2.7
 Tested up to: 2.9
 Stable tag: 0.5.3
 
-This plugin enables comments to have knowledge types and facilitates knowledge building on Wordpress.
+Use post comment threads to facilitate meaningful knowledge building discussions. Comes with several knowledge type sets (eg. progressive inquiry, six hat thinking) that can be used to semantically tag comments, turning your Wordpress into a knowledge building environment. Especially useful in educational settings.
 
 == Description ==
 
