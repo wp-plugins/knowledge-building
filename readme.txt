@@ -59,6 +59,9 @@ Either copy an existing typeset's XML file to a new name, and edit it to your li
 
 == Changelog ==
 
+=0.5.4=
+* Tested to work with Wordpress 3.0.
+
 =0.5.3=
 * Tested to work with Wordpress 2.9.
 
