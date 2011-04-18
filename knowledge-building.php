@@ -3,12 +3,12 @@
 Plugin Name: Knowledge Building
 Plugin URI: http://fle4.uiah.fi/kb-wp-plugin
 Description: Use post comment threads to facilitate meaningful knowledge building discussions. Comes with several knowledge type sets (eg. progressive inquiry, six hat thinking) that can be used to semantically tag comments, turning your Wordpress into a knowledge building environment. Especially useful in educational settings.
-Version: 0.5.3
+Version: 0.5.5
 Author: Tarmo Toikkanen
 Author URI: http://tarmo.fi
 */
 
-/*  Copyright 2009  Tarmo Toikkanen  (email : tarmo@iki.fi)
+/*  Copyright 2009-2011  Tarmo Toikkanen  (email : tarmo@iki.fi)
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by

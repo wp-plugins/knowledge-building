@@ -1,10 +1,10 @@
  ===
 Contributors: tatti
 Donate link: http://fle4.uiah.fi/
-Tags: education, learning, knowledge building, progressive inquiry, comments
+Tags: education, learning, knowledge building, progressive inquiry, comments, discussion, school
 Requires at least: 2.7
-Tested up to: 2.9
-Stable tag: 0.5.3
+Tested up to: 3.1.1
+Stable tag: 0.5.5
 
 Use post comment threads to facilitate meaningful knowledge building discussions. Comes with several knowledge type sets (eg. progressive inquiry, six hat thinking) that can be used to semantically tag comments, turning your Wordpress into a knowledge building environment. Especially useful in educational settings.
 
@@ -22,10 +22,10 @@ This section describes how to install the plugin and get it working.
 
 1. Store the plugin into the `/wp-content/plugins/knowledge-building/` directory (basically just unzip the contents of the file into /wp-content/plugins).
 1. Activate the plugin through the 'Plugins' menu in Wordpress.
-1. Edit the 'Comments' template of your skin and change `wp_comment_list` to `knbu_comment_list`.
+1. Edit the 'Comments' template of your skin and change `wp_list_comments` to `knbu_list_comments`.
 1. Go to Settings, Knowledge Building and select which post Categories should have Knowledge Building enabled.
 
-Please note that since this plugin relies heavily on the commenting feature, not all themes will work nicely. Specifically, this plugin works best with themes that use the Wordpress built-in comment Walker. You can detect this by checking whether or not your comments.php template has a call to 'wp_comment_list' or not. If it does not, then it has its own custom way of showing comments, which this plugin cannot easily work with. You can either select another theme which uses Wordpress Walker, or just try and replace the code in comments.php that displays comments with a call to `knbu_comment_list();` and cross your fingers. :-)
+Please note that since this plugin relies heavily on the commenting feature, not all themes will work nicely. Specifically, this plugin works best with themes that use the Wordpress built-in comment Walker. You can detect this by checking whether or not your comments.php template has a call to 'wp_list_comments' or not. If it does not, then it has its own custom way of showing comments, which this plugin cannot easily work with. You can either select another theme which uses Wordpress Walker, or just try and replace the code in comments.php that displays comments with a call to `knbu_list_comments();` and cross your fingers. :-)
 
 == Frequently Asked Questions ==
 
@@ -58,6 +58,9 @@ Either copy an existing typeset's XML file to a new name, and edit it to your li
 1. Demonstration of the progressive inquiry knowledge typeset in use on Wordpress.
 
 == Changelog ==
+
+=0.5.4=
+* Tested to work with Wordpress 3.0.
 
 =0.5.3=
 * Tested to work with Wordpress 2.9.

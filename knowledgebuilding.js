@@ -23,7 +23,7 @@ function knbu_enable() {
 function scaffold_update(callback) {
  var ktype = $j("#knbu_real_ktype")[0].value;
  var link = $j(this);
- $j.post(link.attr("href"), {
+ $j.post(".", {
    knbu_ktype_info: ktype
   }, function(data) {
    if ( ktype_color ) {
