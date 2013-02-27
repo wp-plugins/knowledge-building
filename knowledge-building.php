@@ -3,7 +3,7 @@
 Plugin Name: Knowledge Building
 Plugin URI: http://fle4.uiah.fi/kb-wp-plugin
 Description: Use post comment threads to facilitate meaningful knowledge building discussions. Comes with several knowledge type sets (eg. progressive inquiry, six hat thinking) that can be used to semantically tag comments, turning your Wordpress into a knowledge building environment. Especially useful in educational settings.
-Version: 0.5.6
+Version: 0.6
 Author: Tarmo Toikkanen
 Author URI: http://tarmo.fi
 */
@@ -160,8 +160,12 @@ function knbu_plugin_options() {
  * @uses get_the_category
  * @return string Found KB typeset or false if not found.
  */
-function knbu_get_kbset_for_post() {
+function knbu_get_kbset_for_post($id = false) {
 	global $post;
+	
+	if(!$id)
+		$id = $post->ID;
+	
 	$kbset = false;
 	$sels = get_option('knbu_categories');
 	foreach ( get_the_category($post->ID) as $cat ) {
@@ -263,14 +267,21 @@ function knbu_list_comments($args = array(), $comments = null) {
 
 ?>
 <div id="comment_sorter">
+	
 Show notes
 <ul>
+<li>as map</li>
 <li>as thread</li>
 <li>by knowledge type</li>
 <li>by person</li>
 <li>by date</li>
 </ul>
 </div>
+<div id="map-frame">
+	<iframe src="<?php echo add_query_arg( 'map-view', '1' ); ?>" style="width: 100%; height: 720px;"></iframe>
+	<a href="<?php echo add_query_arg( 'map-view', '1' ); ?>" target="_blank"><?php _e('Open in a new window'); ?></a>
+	</div>
+<div id="comment-frame" style="display: none">
 <?php
 
 	$kbtype = knbu_get_kbset_for_post();
@@ -280,6 +291,10 @@ Show notes
 		$comments = knbu_fetch_ktypes($wp_query->comments,$wp_query->post->ID);
 		wp_list_comments(array('walker'=>new Walker_KB),$comments);
 	}
+	
+	?>
+	</div>
+	<?php
 }
 
 /**
@@ -288,6 +303,7 @@ Show notes
  * This Walker code is essentially a copy of Walker_Comment, but extended to
  * display custom comment KB types.
  */
+$comment_index = 0;
 class Walker_KB extends Walker_Comment {
 	/**
 	 * @see Walker_Comment::start_el()
@@ -302,6 +318,7 @@ class Walker_KB extends Walker_Comment {
 	 * @param array $args
 	 */
 	function start_el(&$output, $comment, $depth, $args) {
+		global $comment_index; 
 		$depth++;
 		$GLOBALS['comment_depth'] = $depth;
 
@@ -323,7 +340,7 @@ class Walker_KB extends Walker_Comment {
 			$add_below = 'div-comment';
 		}
 			?>
-				<<?php echo $tag ?> <?php comment_class(empty( $args['has_children'] ) ? '' : 'parent') ?> id="comment-<?php comment_ID() ?>">
+				<<?php echo $tag ?> <?php comment_class(empty( $args['has_children'] ) ? '' : 'parent') ?> id="comment-<?php comment_ID() ?>" data-comment-index="<?php echo ++$comment_index; ?>">
 				<?php if ( 'ul' == $args['style'] ) : ?>
 				<div id="div-comment-<?php comment_ID() ?>" class="comment-body <?php echo ' ' . $ktype['Colour']; ?>">
 				<?php endif; ?>
@@ -368,7 +385,6 @@ function knbu_custom_stylesheet() {
 add_action('wp_print_scripts', 'knbu_script_load');
 /**
  * Add custom javascript files when needed.
- *
  * Hooked to wp_print_scripts action. Only adds scripts when displaying comments.
  */
 function knbu_script_load() {
@@ -413,7 +429,6 @@ function knbu_ajax_ktype_provider() {
 	}
 }
 
-
 add_action('comment_form', 'knbu_comment_form');
 /**
  * Displays custom additions to comment editing form.
@@ -457,4 +472,107 @@ function knbu_comment_form($post_ID) {
 <?php
 }
 
+add_action('init', 'knbu_init_mapview');
+
+function knbu_init_mapview() {
+	//To do: Check category and post (?)
+	define('KNBU_MAPVIEW', isset($_GET['map-view']));
+}
+
+add_action('wp_enqueue_scripts', 'knbu_enqueue_scripts');
+
+function knbu_enqueue_scripts() {
+	if(KNBU_MAPVIEW) {
+		wp_register_script('knbu-map-script', plugins_url().'/knowledge-building/knbu-map-script.js', array( 'jquery', 'jquery-ui-core', 'jquery-ui-slider' ));
+		wp_register_script('jquery-mousewheel', plugins_url().'/knowledge-building/jquery.mousewheel.js', array( 'jquery' ));
+		wp_register_script('raphael-js', plugins_url().'/knowledge-building/raphael-min.js');
+		
+		wp_enqueue_script(array( 'raphael-js', 'knbu-map-script', 'jquery-mousewheel' ));
+	}
+}
+	
+add_action('wp_ajax_nopriv_knbu_new_reply', 'knbu_new_reply_ajax');
+add_action('wp_ajax_knbu_new_reply', 'knbu_new_reply_ajax');
+
+function knbu_new_reply_ajax() {
+	$time = current_time('mysql');
+	$var = new StdClass();
+	$var->user_id = wp_get_current_user();
+	$var->user_id = $var->user_id->ID;
+	
+	if(strlen($_POST['comment_content']) == 0) {
+		$var->Message = 'Content field cannot be empty'; 
+		echo json_encode($var);
+		die();
+	}
+	if(!isset($_POST['comment_knbu_type']) || strlen($_POST['comment_knbu_type']) == 0 || $_POST['comment_knbu_type'] == 'Select type') {
+		$var->Message = 'Please select Knowledge type.'; 
+		echo json_encode($var);
+		die();
+	}
+	if(!is_numeric($_POST['comment_post_ID'])) {
+		$var->Message = 'There was an error.'; 
+		echo json_encode($var);
+		die();
+	}
+	
+	$data = array(
+		'comment_post_ID' => $_POST['comment_post_ID'],
+		'comment_content' => $_POST['comment_content'],
+		'comment_parent' => $_POST['comment_parent'],
+		'user_id' => $var->user_id,
+		'comment_date' => $time,
+		'comment_approved' => 1
+	);
+	$id = wp_insert_comment($data);
+	$var->content = $_POST['comment_content'];
+	if($id) {
+		$var->Success = true;
+		$ktype = $_POST['comment_knbu_type'];
+		$var->knbu = $ktype;
+		global $wpdb;
+			
+		$table_name = $wpdb->prefix . 'knowledgetypes';
+		$result = $wpdb->query( $wpdb->prepare("SELECT * FROM $table_name WHERE comment_id = %d;", $id ) );
+		if ($result)
+			$wpdb->query( $wpdb->prepare("UPDATE $table_name SET kbtype = %s;", $ktype ) );
+		else
+			$wpdb->query( $wpdb->prepare("INSERT INTO $table_name (comment_id,kbtype) VALUES(%d,%s);", $id, $ktype ) );
+	}
+	$var->username = get_the_author_meta('display_name', $var->user_id);
+	$var->avatar = knbu_get_avatar_url($var->user_id);
+	$var->parent = $_POST['comment_parent'];
+	$var->id = $id;
+	echo json_encode($var);
+	die();
+}
+
+
+/* Map view */
+add_filter('template_include', 'knbu_map_view_template');
+
+function knbu_map_view_template($template) {
+	if(isset($_GET['map-view'])) {
+		return plugin_dir_path(__FILE__).'map.php';
+	}
+	return $template;
+}
+	
+function knbu_get_avatar_url($user) {
+	$email = get_the_author_meta('user_email', $user);
+	$a = md5( strtolower( trim( $email ) ) );
+	return 'http://www.gravatar.com/avatar/'.$a.'?s=92&d=mm';
+}
+
+class Knbu_Knowledge_Type {
+	public $id;
+	public $name;
+	public $language;
+	public $description;
+	public $starting_phrase;
+	public $color;
+	
+	function __construct() {
+	}
+}
 ?>
