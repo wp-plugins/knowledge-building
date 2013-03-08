@@ -3,7 +3,7 @@
 Plugin Name: Knowledge Building
 Plugin URI: http://fle4.uiah.fi/kb-wp-plugin
 Description: Use post comment threads to facilitate meaningful knowledge building discussions. Comes with several knowledge type sets (eg. progressive inquiry, six hat thinking) that can be used to semantically tag comments, turning your Wordpress into a knowledge building environment. Especially useful in educational settings.
-Version: 0.5.7
+Version: 0.5.8
 Author: Tarmo Toikkanen
 Author URI: http://tarmo.fi
 */
@@ -27,6 +27,23 @@ Author URI: http://tarmo.fi
 
 global $knbu_db_version;
 $knbu_db_version='0.12';
+$knbu_plugin_version = '0.5.8';
+
+add_action( 'admin_init', 'knbu_upgrade_hook' );
+
+function knbu_upgrade_hook() {
+	global $knbu_plugin_version, $wpdb;
+	
+	if(get_option( 'knbu_plugin_version' ) != $knbu_plugin_version) {
+		
+		$table_name = $wpdb->prefix . 'knowledgetypes';
+		
+		if( $wpdb->get_var("SHOW TABLES LIKE '$table_name'") == $table_name ) 
+		{ knbu_custom_table_to_comment_meta(); }
+		
+		update_option( 'knbu_plugin_version', $knbu_plugin_version );
+	}
+}
 
 /*
  * This code snippet loads the XML specifications of KB typesets into memory.
@@ -209,12 +226,16 @@ function knbu_store_comment($comment) {
 		$cid = $comment;
 	else
 		$cid = $comment['comment_post_ID'];
+	
+	update_comment_meta( $cid, 'kbtype', $ktype );
+	/*
 	$table_name = $wpdb->prefix . 'knowledgetypes';
 	$result = $wpdb->query( $wpdb->prepare("SELECT * FROM $table_name WHERE comment_id = %d;", $cid ) );
 	if ($result)
 		$wpdb->query( $wpdb->prepare("UPDATE $table_name SET kbtype = %s;", $ktype ) );
 	else
 		$wpdb->query( $wpdb->prepare("INSERT INTO $table_name (comment_id,kbtype) VALUES(%d,%s);", $cid, $ktype ) );
+		*/
 }
 
 add_action('comments_array', 'knbu_fetch_ktypes', 10, 2);
@@ -229,7 +250,12 @@ add_action('comments_array', 'knbu_fetch_ktypes', 10, 2);
  * @return array             Comments that are populated with KB type information
  */
 function knbu_fetch_ktypes($comments, $post_id) {
-	global $wpdb;
+	
+	foreach($comments as $comment) 
+		$comment->ktype = get_comment_meta( $comment->comment_ID, 'kbtype', true); 
+		
+	/*
+	 * 
 	$result = $wpdb->get_results( $wpdb->prepare(
 		"SELECT kb.comment_id, kb.kbtype FROM " . $wpdb->prefix . "knowledgetypes kb, " .
 		$wpdb->prefix . "comments c " .
@@ -242,6 +268,7 @@ function knbu_fetch_ktypes($comments, $post_id) {
 			}
 		}
 	}
+	*/
 	return $comments;
 }
 
@@ -460,6 +487,16 @@ function knbu_comment_form($post_ID) {
 		<input id="knbu_real_ktype" type="text" style="display:none;"" name="knbu_ktype" value=""/>
 	</div>
 <?php
+}
+
+function knbu_custom_table_to_comment_meta() {
+	global $wpdb;
+	$table_name = $wpdb->prefix . 'knowledgetypes';
+	
+	$rows = $wpdb->get_results("SELECT * FROM $table_name"); 
+	foreach($rows as $row) {
+		add_comment_meta($row->comment_id, 'kbtype', $row->kbtype);
+	}
 }
 
 ?>
