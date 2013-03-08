@@ -27,7 +27,7 @@ Author URI: http://tarmo.fi
 
 global $knbu_db_version;
 $knbu_db_version='0.12';
-$knbu_plugin_version = '0.5.8';
+$knbu_plugin_version = '0.5.8.1';
 
 add_action( 'admin_init', 'knbu_upgrade_hook' );
 
@@ -494,9 +494,15 @@ function knbu_custom_table_to_comment_meta() {
 	$table_name = $wpdb->prefix . 'knowledgetypes';
 	
 	$rows = $wpdb->get_results("SELECT * FROM $table_name"); 
+	$success = true;
 	foreach($rows as $row) {
-		add_comment_meta($row->comment_id, 'kbtype', $row->kbtype);
+		if(!update_comment_meta($row->comment_id, 'kbtype', $row->kbtype)) 
+		$success = false;
 	}
+	if(!$success)
+	wp_die('Something went wrong. Original data has not been deleted.');
+	
+	$wpdb->query("RENAME TABLE ".$table_name." TO ".$table_name."_backup");
 }
 
 ?>
