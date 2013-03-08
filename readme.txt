@@ -2,7 +2,7 @@
 Contributors: tatti
 Donate link: http://fle4.uiah.fi/
 Tags: education, learning, knowledge building, progressive inquiry, comments, discussion, school
-Requires at least: 2.7
+Requires at least: 2.9
 Tested up to: 3.5.1
 Stable tag: 0.5.8.1
 
