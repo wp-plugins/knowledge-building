@@ -12,7 +12,7 @@ knowledge visible and working from there to deepen the understanding on
 the issue by creating discussion notes. The reading and writing of these
 notes is seen as the key momentum of the process, helping learners to
 structure their ideas based on the principle of scientific research.
-</Description><StartingTypes><KnowledgeTypeRef ID-REF="problem"/></StartingTypes><FollowupRule><KnowledgeTypeRef ID-REF="problem"/><KnowledgeTypeRef ID-REF="problem"/><KnowledgeTypeRef ID-REF="my_expl"/><KnowledgeTypeRef ID-REF="sci_expl"/><KnowledgeTypeRef ID-REF="evaluation"/><KnowledgeTypeRef ID-REF="summary"/></FollowupRule><FollowupRule><KnowledgeTypeRef ID-REF="my_expl"/><KnowledgeTypeRef ID-REF="problem"/><KnowledgeTypeRef ID-REF="my_expl"/><KnowledgeTypeRef ID-REF="sci_expl"/><KnowledgeTypeRef ID-REF="evaluation"/><KnowledgeTypeRef ID-REF="summary"/></FollowupRule><FollowupRule><KnowledgeTypeRef ID-REF="sci_expl"/><KnowledgeTypeRef ID-REF="problem"/><KnowledgeTypeRef ID-REF="my_expl"/><KnowledgeTypeRef ID-REF="sci_expl"/><KnowledgeTypeRef ID-REF="evaluation"/><KnowledgeTypeRef ID-REF="summary"/></FollowupRule><FollowupRule><KnowledgeTypeRef ID-REF="evaluation"/><KnowledgeTypeRef ID-REF="problem"/><KnowledgeTypeRef ID-REF="my_expl"/><KnowledgeTypeRef ID-REF="sci_expl"/><KnowledgeTypeRef ID-REF="evaluation"/><KnowledgeTypeRef ID-REF="summary"/></FollowupRule><FollowupRule><KnowledgeTypeRef ID-REF="summary"/><KnowledgeTypeRef ID-REF="problem"/><KnowledgeTypeRef ID-REF="my_expl"/><KnowledgeTypeRef ID-REF="sci_expl"/><KnowledgeTypeRef ID-REF="evaluation"/><KnowledgeTypeRef ID-REF="summary"/></FollowupRule><KnowledgeType Colour="tt_yellowlt" ID="problem" Name="Problem"><Icon LocalName="data1" ContentType="image/gif"/><StartingPhrase>I would like to find out why/how...
+</Description><StartingTypes><KnowledgeTypeRef ID-REF="problem"/></StartingTypes><FollowupRule><KnowledgeTypeRef ID-REF="problem"/><KnowledgeTypeRef ID-REF="problem"/><KnowledgeTypeRef ID-REF="my_expl"/><KnowledgeTypeRef ID-REF="sci_expl"/><KnowledgeTypeRef ID-REF="evaluation"/><KnowledgeTypeRef ID-REF="summary"/></FollowupRule><FollowupRule><KnowledgeTypeRef ID-REF="my_expl"/><KnowledgeTypeRef ID-REF="problem"/><KnowledgeTypeRef ID-REF="my_expl"/><KnowledgeTypeRef ID-REF="sci_expl"/><KnowledgeTypeRef ID-REF="evaluation"/><KnowledgeTypeRef ID-REF="summary"/></FollowupRule><FollowupRule><KnowledgeTypeRef ID-REF="sci_expl"/><KnowledgeTypeRef ID-REF="problem"/><KnowledgeTypeRef ID-REF="my_expl"/><KnowledgeTypeRef ID-REF="sci_expl"/><KnowledgeTypeRef ID-REF="evaluation"/><KnowledgeTypeRef ID-REF="summary"/></FollowupRule><FollowupRule><KnowledgeTypeRef ID-REF="evaluation"/><KnowledgeTypeRef ID-REF="problem"/><KnowledgeTypeRef ID-REF="my_expl"/><KnowledgeTypeRef ID-REF="sci_expl"/><KnowledgeTypeRef ID-REF="evaluation"/><KnowledgeTypeRef ID-REF="summary"/></FollowupRule><FollowupRule><KnowledgeTypeRef ID-REF="summary"/><KnowledgeTypeRef ID-REF="problem"/><KnowledgeTypeRef ID-REF="my_expl"/><KnowledgeTypeRef ID-REF="sci_expl"/><KnowledgeTypeRef ID-REF="evaluation"/><KnowledgeTypeRef ID-REF="summary"/></FollowupRule><KnowledgeType Colour="#FFFFAD" ID="problem" Name="Problem"><Icon LocalName="data1" ContentType="image/gif"/><StartingPhrase>I would like to find out why/how...
 I am interested in studying why/how...</StartingPhrase><Description>Your study problem in research. The learning process aims at answering
 to the problems presented by the students. The purpose of defining a
 problem statement is to explicate your learning goals, to explain your
@@ -23,7 +23,7 @@ also new subordinate problems can be defined.</Description><Checklist>Are you in
 
 Are you explaining your &lt;b&gt;research interests&lt;/b&gt;?
 
-Give explanations to your problem in another note.</Checklist></KnowledgeType><KnowledgeType Colour="tt_aqua" ID="my_expl" Name="My Explanation"><Icon LocalName="data2" ContentType="image/gif"/><StartingPhrase>I think that...
+Give explanations to your problem in another note.</Checklist></KnowledgeType><KnowledgeType Colour="#C5E2D5" ID="my_expl" Name="My Explanation"><Icon LocalName="data2" ContentType="image/gif"/><StartingPhrase>I think that...
 I believe that...</StartingPhrase><Description> My Explanation presents your own conceptions (hypothesis, theory,
 explanation, interpretation) about the problems presented by yourself or
 some of your fellow students. "My Explanation" is not necessarily well
@@ -33,7 +33,7 @@ process and your working theories become more refined and developed.</Descriptio
 
 &lt;b&gt;Don't finalize&lt;/b&gt; your explanation. Post more elaborated versions later.
 
-If you have knowledge from an information source, you should write a "Scientific explanation".</Checklist></KnowledgeType><KnowledgeType Colour="tt_orangelt" ID="sci_expl" Name="Scientific Explanation"><Icon LocalName="data3" ContentType="image/gif"/><StartingPhrase>I have found some information...</StartingPhrase><Description>Scientific Explanation presents some scientific findings or other
+If you have knowledge from an information source, you should write a "Scientific explanation".</Checklist></KnowledgeType><KnowledgeType Colour="#FFE1AA" ID="sci_expl" Name="Scientific Explanation"><Icon LocalName="data3" ContentType="image/gif"/><StartingPhrase>I have found some information...</StartingPhrase><Description>Scientific Explanation presents some scientific findings or other
 knowledge that you have sought. Under  Scientific Explanation  you may
 brings to the discussion some new points of view or otherwise helps the
 inquiry process to continue. It differs from your own explanation (My
@@ -44,7 +44,7 @@ in concern.</Description><Checklist>Are you including &lt;b&gt;information provi
 
 Does the explanation &lt;b&gt;connect to the problems and explanations&lt;/b&gt; you have posted?
 
-Remember to mention &lt;b&gt;where you found the information&lt;/b&gt; (book, article, web site, TV programme, lecture, discussion).</Checklist></KnowledgeType><KnowledgeType Colour="tt_purple" ID="evaluation" Name="Evaluation of the Process"><Icon LocalName="data4" ContentType="image/gif"/><StartingPhrase>I think that our ideas...
+Remember to mention &lt;b&gt;where you found the information&lt;/b&gt; (book, article, web site, TV programme, lecture, discussion).</Checklist></KnowledgeType><KnowledgeType Colour="#DCCAFF" ID="evaluation" Name="Evaluation of the Process"><Icon LocalName="data4" ContentType="image/gif"/><StartingPhrase>I think that our ideas...
 I think that our learning process...</StartingPhrase><Description>Your comment that focuses on the inquiry process and its methods
 instead of the process outcomes - meta-comment. With a "Evaluation of
 the Process" you may evaluate e.g. whether the process is progressing in
@@ -54,7 +54,7 @@ learning community.</Description><Checklist>Are you talking about &lt;b&gt;organ
 
 Have you expressed &lt;b&gt;your opinion&lt;/b&gt; on how the learning process is advancing?
 
-Are you &lt;b&gt;sharing tasks&lt;/b&gt; or &lt;b&gt;discussing the methods&lt;/b&gt; used?</Checklist></KnowledgeType><KnowledgeType Colour="tt_greenlt" ID="summary" Name="Summary"><Icon LocalName="data5" ContentType="image/gif"/><StartingPhrase>We have learned that...
+Are you &lt;b&gt;sharing tasks&lt;/b&gt; or &lt;b&gt;discussing the methods&lt;/b&gt; used?</Checklist></KnowledgeType><KnowledgeType Colour="#DCFC98" ID="summary" Name="Summary"><Icon LocalName="data5" ContentType="image/gif"/><StartingPhrase>We have learned that...
 We came up with the conclusion that...</StartingPhrase><Description>With a summary you draw pieces of the discussion together and provide
 inferences based on the discussion in the Knowledge Building. The
 summary may aim at identifying a new Course Context or may reflect the
