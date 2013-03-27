@@ -65,22 +65,28 @@ $replies = get_comments(array(
 			</div>
 			<div style="clear:both"></div>
 		<div class="message-coords"></div>
-		<?php if(is_user_logged_in()) { ?>
 		<a class="reply-toggle knbu-form-link" id="open-reply">Reply</a>
 		<div id="reply-wrapper">
 			<form>
-			<input type="hidden" value="<?php echo admin_url('admin-ajax.php'); ?>" id="admin-ajax-url">
-			<input type="hidden" value="<?php echo get_the_ID(); ?>" id="post-id">
+				<?php if(is_user_logged_in()) { ?>
+					<input type="hidden" value="1" id="current_user">
+					<?php } else { ?>
+					<p>Your info <br/>
+					<input type="hidden" value="0" id="current_user">
+					<input type="text" placeholder="Name" id="current_user_name"> 
+					<input type="text" placeholder="Email" id="current_user_email">
+					</p>
+				<?php } ?>
+				<input type="hidden" value="<?php echo admin_url('admin-ajax.php'); ?>" id="admin-ajax-url">
+				<input type="hidden" value="<?php echo get_the_ID(); ?>" id="post-id">
 				<input type="hidden" name="parent-comment" id="parent-comment-id">
-				<p><!-- Title --> <input type="text" id="comment-title" placeholder="Title"> <!-- Knowledge type --> <?php echo knbu_get_knowledge_type_select(); ?></p>
+				<p>Comment <br><input type="text" id="comment-title" placeholder="Title"> <!-- Knowledge type --> <?php echo knbu_get_knowledge_type_select(); ?></p>
 				<p style="clear: both"><!--Reply<br>-->
 				<textarea style="width: 95%" rows="8" name="comment-content" placeholder="Reply"></textarea></p>
 				<p><input type="button" value="Send" id="submit-reply" ></p>
 			</form>
 		</div>
-		<?php } else { ?>
-			<a href="<?php echo wp_login_url(); ?>" target="_top" class="reply-toggle knbu-form-link">Log in to reply</a>
-		<?php } ?>
+		
 		<div style="clear:both"></div>
 		</div>
 	</div>

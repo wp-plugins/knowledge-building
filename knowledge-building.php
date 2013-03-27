@@ -3,7 +3,7 @@
 Plugin Name: Knowledge Building
 Plugin URI: http://fle4.uiah.fi/kb-wp-plugin
 Description: Use post comment threads to facilitate meaningful knowledge building discussions. Comes with several knowledge type sets (eg. progressive inquiry, six hat thinking) that can be used to semantically tag comments, turning your Wordpress into a knowledge building environment. Especially useful in educational settings.
-Version: 0.6
+Version: 0.6.1
 Author: Tarmo Toikkanen, Antti Sandberg
 Author URI: http://tarmo.fi
 */
@@ -27,7 +27,7 @@ Author URI: http://tarmo.fi
 
 global $knbu_db_version;
 $knbu_db_version='0.12';
-$knbu_plugin_version = '0.6';
+$knbu_plugin_version = '0.6.1';
 
 add_action( 'admin_init', 'knbu_upgrade_hook' );
 
@@ -505,13 +505,8 @@ add_action('wp_ajax_knbu_new_reply', 'knbu_new_reply_ajax');
 
 function knbu_new_reply_ajax() {
 	
-	if(!is_user_logged_in())
-		die();
-		
 	$time = current_time('mysql');
 	$var = new StdClass();
-	$var->user_id = wp_get_current_user();
-	$var->user_id = $var->user_id->ID;
 	
 	if(strlen($_POST['comment_content']) == 0) {
 		$var->Message = 'Content field cannot be empty'; 
@@ -520,11 +515,10 @@ function knbu_new_reply_ajax() {
 	}
 	
 	if(strlen($_POST['comment_title']) == 0) {
-		$var->Message = 'Content title field cannot be empty'; 
+		$var->Message = 'Comment title field cannot be empty'; 
 		echo json_encode($var);
 		die();
 	}
-
 	if(!isset($_POST['comment_knbu_type']) || strlen($_POST['comment_knbu_type']) == 0 || $_POST['comment_knbu_type'] == 'Select type') {
 		$var->Message = 'Please select Knowledge type.'; 
 		echo json_encode($var);
@@ -536,14 +530,43 @@ function knbu_new_reply_ajax() {
 		die();
 	}
 	
+	if(!$_POST['comment_user']) {
+		if(strlen($_POST['comment_user_email']) == 0) {
+			$var->Message = 'User email field cannot be empty'; 
+			echo json_encode($var);
+			die();
+		}
+		
+		if(strlen($_POST['comment_user_name']) == 0) {
+			$var->Message = 'User name field cannot be empty'; 
+			echo json_encode($var);
+			die();
+		}
+	}
 	$data = array(
 		'comment_post_ID' => $_POST['comment_post_ID'],
 		'comment_content' => $_POST['comment_content'],
 		'comment_parent' => $_POST['comment_parent'],
-		'user_id' => $var->user_id,
 		'comment_date' => $time,
 		'comment_approved' => 1
 	);
+	
+	if($_POST['comment_user']) {
+		$i = wp_get_current_user();
+		$var->user_id = $i->ID;
+		$var->username = get_the_author_meta('display_name', $var->user_id);
+		$var->user_email = get_the_author_meta('user_email', $var->user_id);
+		$data['user_id'] = $var->user_id;
+		$data['comment_author'] = $var->username;
+	}
+	else {
+		$var->user_email = $_POST['comment_user_email'];
+		$var->username = $_POST['comment_user_name'];
+		
+		$data['comment_author_email'] = $var->user_email;
+		$data['comment_author'] = $var->username;
+	}
+	
 	$id = wp_insert_comment($data);
 	$var->content = $_POST['comment_content'];
 	$var->comment_title = $_POST['comment_title'];
@@ -556,8 +579,7 @@ function knbu_new_reply_ajax() {
 		update_comment_meta( $id, 'kbtype', $ktype ); 
 		update_comment_meta( $id, 'comment_title', $var->comment_title );
 	}
-	$var->username = get_the_author_meta('display_name', $var->user_id);
-	$var->avatar = knbu_get_avatar_url($var->user_id);
+	$var->avatar = knbu_get_avatar_url($var->user_email);
 	$var->parent = $_POST['comment_parent'];
 	$var->id = $id;
 	$ktype = knbu_get_type( $_POST['comment_knbu_type'], $_POST['comment_post_ID'] );
@@ -580,8 +602,7 @@ function knbu_map_view_template($template) {
 }
 
 /* Get gravatar url of a user */
-function knbu_get_avatar_url($user) {
-	$email = get_the_author_meta('user_email', $user);
+function knbu_get_avatar_url($email) {
 	$a = md5( strtolower( trim( $email ) ) );
 	return 'http://www.gravatar.com/avatar/'.$a.'?s=92&d=mm';
 }

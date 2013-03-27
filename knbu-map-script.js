@@ -427,7 +427,6 @@
 			
 			/* Click events */
 			node.SVG.Circle.click(function(e) {
-				console.log('Clicked node with ID ' + node.ID);
 				if(Vector.DistanceSquared(mouseDownStart.position, { X: mousePos.x, Y: mousePos.y }) > 10 * 10 ) 
 					return;
 				
@@ -612,9 +611,11 @@
 			comment_content: $('textarea[name="comment-content"]:first').val(),
 			comment_parent: $('#parent-comment-id').val(),
 			comment_title: $('#comment-title').val(),
+			comment_user: parseInt($('#current_user').val()),
+			comment_user_name: $('#current_user_name').val(),
+			comment_user_email: $('#current_user_email').val(),
 			action: 'knbu_new_reply'
 			}, function(response) {
-				
 				/* Response data comes in JSON format */
 				try {
 					response = JSON.parse(response);
@@ -638,7 +639,8 @@
 						username: response.username,
 						level: SelectedNode.level + 1,
 						date: response.date,
-						color: response.color
+						color: response.color,
+						title: response.comment_title
 					});
 					AddNode(n);
 					
@@ -650,10 +652,14 @@
 						submitted = false;
 					});
 				}
-				else if(response.Message)
+				else if(response.Message) {
+					submitted = false;
 					alert(response.Message);
-				else
+				}
+				else {
+					submitted = false;
 					console.log('General error message');
+				}
 		});
 	}
 
