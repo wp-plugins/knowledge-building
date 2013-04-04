@@ -59,6 +59,9 @@ Either copy an existing typeset's XML file to a new name, and edit it to your li
 
 == Changelog ==
 
+=0.6=
+* A new map view introduced.
+
 =0.5.7=
 * Tested to work with Wordpress 3.5.1
 * IE bug fix

@@ -5,7 +5,7 @@
 
 	var Canvas, ViewPort;
 	/* Working values: Repulse 15000, Attract 0.001 */
-	var C = { Radius: 14, Stroke: 8, Repulse: 15000, Attract: 0.001, Ignore_distance: 800 }
+	var C = { Radius: 14, Stroke: 8, Repulse: 15000 * 3, Attract: 0.001, Ignore_distance: 800 }
 	var mouseDown = false;
 	var mousePos;
 	var Nodes = [];
@@ -16,18 +16,19 @@
 	var Widht, Height;
 	var OriginalViewPort = { width: 0, height: 0 }
 	var AnimateNodeMovement = false;
+	var submitted = false;
+	var draggingNode = false;
+	var tries = 0; 
+	var totalStart = 0;
+	var mouseDownStart = 0;
 
 	var POST;
+	/* If the browser doesn't support javascript console */
+	if(!console)
+		console = { log: function(s) { } }
+	else if(!console.log)
+		console.log = function(s) { }
 	
-	/* These values should be fetched from the server */
-	var Colors = {
-		'problem': '#fcfc43',
-		'my_expl': '#4ace93',
-		'sci_expl': '#ffb42b',
-		'evaluation': '#7e3cff',
-		'summary': '#99d51a'
-	};
-
 	/* Run when document is ready */
 	function Init() {
 		//Get post ID
@@ -53,18 +54,38 @@
 			level: 0,
 			avatar: $('#data').attr('data-avatar'),
 			username: $('#data').attr('data-username'),
-			});
+			date: $('#data').attr('data-date'),
+			typeName: 'Start',
+			title: $('#data').attr('data-title')
+		});
 		
+		Nodes[0] = main;
 		//And make its position static
 		main.Static = true;
-		
 		//Loop through the list
 		IterateChildren($('#data'), 1, main);
 		
+		for(var i in Nodes) { 
+			Nodes[i].SetParents();
+		}
+		
+		$('body').mouseup(function(){ draggingNode = false; });
 		//Pan and Zoom mouse functionality
 		$('svg').
-			mousedown(function(e) { mouseDown = true; mousePos = { x: e.pageX, y: e.pageY }; $('#message').hide(0); }).
-			mouseup(function() { mouseDown = false; MoveCanvas(); }).mouseleave(function() { mouseDown = false; MoveCanvas(); }).
+			mousedown(function(e) { 
+				mouseDownStart = { time: Date.now(), position: { X: mousePos.x, Y: mousePos.y } };
+				if(e.target.nodeName == 'svg') { 
+					mouseDown = true; 
+					mousePos = { x: e.pageX, y: e.pageY }; 
+					$('#message').hide(0);  
+				}
+			}).
+			mouseup(function(e) { 
+				if(mouseDown){ mouseDown = false; MoveCanvas(); }
+			}).
+			mouseleave(function(e) { 
+				if(mouseDown) { mouseDown = false; MoveCanvas(); }
+			}).
 			mousemove(function(e) {
 				if(mouseDown) {
 					Pan(e.pageX - mousePos.x, e.pageY - mousePos.y);
@@ -72,24 +93,15 @@
 				}
 				mousePos = { x: e.pageX, y: e.pageY };
 			}).
-			mousewheel(function(e, delta) { e.preventDefault(); $('#zoom').slider('value', $('#zoom').slider('value') + delta * $('#zoom').slider('option', 'step')); });
+			mousewheel(function(e, delta) { 
+				e.preventDefault(); 
+				$('#zoom').slider('value', $('#zoom').slider('value') + delta * $('#zoom').slider('option', 'step')); 
+			});
 			
 		
 		/* Move connection lines before circles, so circles won't be under the lines. (Mouse events) */
 		$('#raven > svg > path').insertBefore('#raven > svg > circle:first');
 		
-		
-		
-		$('#reply').click(function() {
-			var v = Vector.Add(new Vector(SelectedNode.SVG.Circle.attr('cx'), SelectedNode.SVG.Circle.attr('cy')), Vector.Diag(60, Math.random() * 360));
-			AddNode(new Node({
-						position: new Vector(v.X, v.Y),
-						radius: C.Radius, 
-						parent: SelectedNode, 
-						content: SelectedNode.Text,
-						level: SelectedNode.level + 1
-					}));
-		});
 		$('#close').click(function() { $('#message').hide(200); });
 		
 		// Reply click events
@@ -102,8 +114,8 @@
 		// Node calculations
 		totalStart = Date.now();
 		
-		// Adding a new node triggers the node calculations
-		AddNode(main);
+		// Trigger node position calculations
+		ResetNodeUpdating();
 	}
 	
 	var NavigationButtons = { Left: false, Right: false, Up: false, Down: false };
@@ -127,8 +139,35 @@
 		if(true || PanInterval)
 			clearInterval(PanInterval);
 	}
+	
+	function StartNodeDrag(id) {
+		if(draggingNode) return;
+		
+		draggingNode = true;
+		
+		function _drag() {
+			
+			Nodes[id].ChangePosition(mousePos);
+			
+			ResetNodeUpdating();
+			
+			if(draggingNode)
+				setTimeout(_drag, 16);
+		}
+		
+		setTimeout(_drag, 16);
+	}
+	
+	function ResetNodeUpdating() {
+		tries = 0;
+		if(!calculating)
+			CalculatePositions();
+		else
+			requestPositionsCalculating = true;
+	}
 
 	function AddNode(node) {
+		node.SetParents();
 		NodesWaiting.push(node);
 		tries = 0;
 		if(!calculating)
@@ -141,48 +180,43 @@
 		if(list.is('ul')) {
 			list.children('li').each(function(i) {
 				var childCount = list.children('li').size();
-				if(parent.parent)
-					var angle = Vector.Angle(parent.position, parent.parent.position) + 180;
+				if(parent)
+					var angle = Vector.Angle(parent.position, Nodes[0].position) + 180;
 				else
 					var angle = 360/childCount * i;
+					
 				var pos = Vector.Diag(30, (15/childCount) * i - 15/2 + angle);
 				pos.Add(parent.position);
 				var main = new Node({
 						id: $(this).attr('data-id'), 
 						position: new Vector(pos.X, pos.Y), 
 						radius: C.Radius, 
-						parent: parent, 
+						parent: parent.ID, 
 						content: $(this).attr('data-content'), 
 						type: $(this).attr('data-kbtype'),
 						typeName: $(this).attr('data-kbname'),
 						avatar: $(this).attr('data-avatar'),
 						username: $(this).attr('data-username'),
-						level: level
+						date: $(this).attr('data-date'),
+						additionalParents: $(this).attr('data-additional-parents'),
+						color: $(this).attr('data-color'),
+						level: level,
+						title: $(this).attr('data-title')
 					});
 
-				Nodes.push(main);
+				Nodes[$(this).attr('data-id')] = main;
 				$(this).children('ul').each(function() { IterateChildren($(this), level + 1, main); });
 			});
 		}
 	}
 
-	var tries = 0; 
-	var totalStart = 0;
-	var rounds = 0;
 	function CalculatePositions() {
 		
 		// Add nodes that are waiting to be added
 		// Can't add in the middle of a loop
 		for(var i = 0; i < NodesWaiting.length; i++)
-			Nodes.push(NodesWaiting[i]);
+			Nodes[NodesWaiting[i].ID] = NodesWaiting[i];
 			
-		//var nds = [];
-		//for(var i = 0; i < Nodes.length; i++)
-		//	nds.push({ id: Nodes[i].ID, pos: Nodes[i].position, parent: Nodes[i].parent.ID, static: Nodes[i].Static });
-		
-		//$.post('positions.php', { nodes: JSON.stringify(nds) }, function(response) { console.log(response); });
-		//return;
-		
 		// Move connections under circles.
 		if(NodesWaiting.length > 0)
 			$('#raven > svg > path').insertBefore('#raven > svg > circle:first');
@@ -194,33 +228,41 @@
 		var moved = false;
 		var repulsive = new Vector();
 		var attractive = new Vector();
-		for(var j = 0; j < Nodes.length; j++) {
+		
+		var nodePos = [];
+		for(var n in Nodes) { nodePos[n] = Nodes[n].position; }
+		
+		for(var j in Nodes) {
 			var jNode = Nodes[j];
-			
 			if(jNode.Static)
+				continue;
+				
+			if(jNode.dragged)
 				continue;
 			
 			repulsive.X = 0; repulsive.Y = 0;
 			attractive.X = 0; attractive.Y = 0;
 			
-			for(var i = 0; i < Nodes.length; i++) {
+			for(var i in Nodes) {
 				var iNode = Nodes[i];
+				
 				
 				//Obviously we don't have to calculate forces "between" the same node.
 				if(i == j) continue;
 				
 				//If the node is the another node's child calculate attractive force (child pulls its parent)
-				if(iNode.parent && iNode.parent === jNode) {
-					attractive.Add(AttractiveMovement(jNode, iNode));
+				for(var parent in iNode.Parents) {
+					if(iNode.Parents[parent] == jNode.ID) {
+						attractive.Add(AttractiveMovement(jNode, iNode));
+					}
 				}
 				
 				//Repulsive force
 				repulsive.Add(RepulsiveMovement(iNode, jNode));
-			
 			}
 			// Node's parent pulls the node
-			if(jNode.parent){
-				attractive.Add(AttractiveMovement(jNode, jNode.parent));
+			for(var parent in jNode.Parents) {
+				attractive.Add(AttractiveMovement(jNode, Nodes[jNode.Parents[parent]]));
 			}
 			
 			// The total forces
@@ -228,16 +270,22 @@
 			var len = v.LengthSquared();
 			// Limit the maximum movement (otherwise causes bugs)
 			if(len > 150 * 150) 
-				v.Clamp(15);
+				v.Clamp(150);
 			
 			if(len > 0.3) { //If movement is small enough, no need to calculate forces again
 				moved = true;
-			
+				
 				// Apply movement
 				// Second attribute is to how often the nodes will be drawn (true = draw, false = don't draw)
-				jNode.Move(v, true);
+				//v.Multiply(0.01);
+				jNode.Move(v, false);
 			}
 		}
+		
+		for(var i in Nodes) {
+			Nodes[i].UpdatePosition();
+		}
+		
 		tries++;
 		if((moved && tries < 1000) || requestPositionsCalculating)
 			setTimeout(CalculatePositions, 10);
@@ -249,7 +297,6 @@
 				
 			$('#fps').text(Date.now() - totalStart);
 		}
-		rounds++;
 	}
 
 	function RepulsiveMovement(node1, node2) {
@@ -272,6 +319,7 @@
 	function AttractiveMovement(node1, node2) {
 		
 		// Attractive force
+		
 		var v = Vector.Subtract(node1.position, node2.position);
 		v.Normalize();
 		var dist = Vector.DistanceSquared(node1.position, node2.position);
@@ -281,7 +329,7 @@
 			dist = v.LengthSquared();
 		}
 		
-		v.Multiply(-C.Attract * dist);
+		v.Multiply(-dist * C.Attract);
 		return v;
 	}
 	var SelectedNode;
@@ -289,21 +337,100 @@
 		if(!args.typeName)
 			args.typeName = 'Unspecified';
 		
-		this.OldPosition;
 		this.Avatar = args.avatar;
 		this.Username = args.username;
 		this.ID = args.id;
-		this.parent = args.parent;
+		this.Date = args.date;
+		this.parent = parseInt(args.parent);
 		this.position = args.position;
 		this.Radius = args.radius;
-		this.Color = Colors[args.type];
+		this.Color = args.color;
 		this.TypeName = args.typeName;
 		this.Content = args.content;
 		this.level = args.level;
-		this.SVG = Node.Add(this.position.X, this.position.Y, this.Radius, this.parent, this.Color);
+		this.Title = args.title;
+		this.Parents = [];
+		this.Children = [];
+		this.movement = new Vector(0, 0);
+		
+		
 		var node = this;
 		
-		this.SVG.Circle.click(function(e) {
+		/* Parents and childs must be set after all node objects have been defined */
+		this.SetParents = function() {
+			var _parents = [parseInt(args.parent)];
+			if(args.additionalParents)
+				_parents = _parents.concat(args.additionalParents.split(','));
+				
+			for(var _parent in _parents) {
+				this.AddParent(Nodes[_parents[_parent]]);
+			}
+		}
+		
+		this.AddParent = function(parent) {
+			if(!parent) return;
+			if($.inArray(parent.ID, this.Parents) >= 0) return;
+			
+			this.Parents.push(parent.ID);
+			parent.Children.push(this.ID);
+			
+			var path = Canvas.path('M' + this.position.X + ',' + this.position.Y + 'L' + parent.position.X + ',' + parent.position.Y);
+			path.attr('stroke', 'rgba(130, 130, 130)');
+			this.SVG.Connections[parent.ID] = path;
+			
+			/* Move connection lines before circles, so circles won't be under the lines. (Mouse events) */
+			$('#raven > svg > path').insertBefore('#raven > svg > circle:first');
+		}
+		
+		this.InitSVG = function() { 
+		
+			node.SVG = Node.Add(
+				node.position.X, 
+				node.position.Y, 
+				node.Radius, 
+				node.Parents, 
+				node.Color, 
+				node.ID, 
+				node.Title,
+				node.Username,
+				node.Date
+				); 
+			node.SVG.Circle.ID = node.ID;
+			/* Drag'n drop */
+			function move(dx, dy) { 
+				if(node.Static) return;
+				
+				node.ChangePosition({ x: node.originalpos.x + dx * scale, y: node.originalpos.y + dy * scale }); 
+				ResetNodeUpdating();
+			}
+			
+			function stopdrag() { 
+				node.dragged = false; 
+				ResetNodeUpdating(); 
+			}
+			
+			function startdrag() {
+				node.dragged = true;
+				node.originalpos = { x: node.SVG.Circle.attrs.cx, y: node.SVG.Circle.attrs.cy };
+			}
+			
+			node.SVG.Circle.drag(move, startdrag, stopdrag);
+			
+			/* Addtional parents disabled 
+			node.SVG.Circle.onDragOver(function(element) {
+				if(node.Static) return;
+				if(element.type != 'circle') return;
+				node.AddParent(Nodes[element.ID]);
+			});
+			*/
+			
+			
+			/* Click events */
+			node.SVG.Circle.click(function(e) {
+				console.log('Clicked node with ID ' + node.ID);
+				if(Vector.DistanceSquared(mouseDownStart.position, { X: mousePos.x, Y: mousePos.y }) > 10 * 10 ) 
+					return;
+				
 				//Shrink the old selected node to its normal size
 				if(SelectedNode)
 					SelectedNode.SVG.Circle.animate({ r: C.Radius }, 200);
@@ -312,7 +439,7 @@
 				//Select the selected node
 				SelectedNode = node;
 				SelectedNode.SVG.Circle.animate({ r: C.Radius * 1.5 }, 200);
-			
+				
 				$('#parent-comment-id').val(SelectedNode.ID);
 			
 				//Set message data
@@ -322,6 +449,7 @@
 				msg.find('.message-avatar').css({ backgroundImage: 'url(' + node.Avatar + ')' });
 				msg.find('.message-username').text(node.Username);
 				msg.find('.message-coords').text();
+				msg.find('.message-date').text(node.Date);
 				
 				//Get SVG element position relative to HTML document
 				var bounds = node.SVG.Circle.node.getBoundingClientRect();
@@ -347,71 +475,69 @@
 					
 				msg.css({ top: top, left: left });
 				
-				//Self-explanatory
-				//msg.css({ borderColor: node.Color });
-				
-				console.log(node.Color);
-				/*
-				if(((Red value X 299) + (Green value X 587) + (Blue value X 114)) / 1000 > 125) {
-					
-				}
-				*/
 				msg.find('.message-header').css({ backgroundColor: node.Color });
 				
 				
 				msg.show(200);
 			});
+		}
 		
-		this.Move = function(movement, update) {
-			this.position.X += movement.X;
-			this.position.Y += movement.Y;
-			
+		this.Move = function(acceleration, update) {
+			this.movement.Add(acceleration);
+			this.position.X += this.movement.X;
+			this.position.Y += this.movement.Y;
+			this.movement.Multiply(0.0);
 			if(update)
 				this.UpdatePosition();
 		}
-		this.UpdateConnections = function() {
+		
+		this.ChangePosition = function(newPos) {
 			
-			if(this.SVG.Connection) {
-				
-				if(AnimateNodeMovement)
-					this.SVG.Connection.animate({ path:'M' + this.position.X + ',' + this.position.Y + 'L' + this.parent.position.X + ',' + this.parent.position.Y }, 200);
-				else
-					this.SVG.Connection.attr({ path:'M' + this.position.X + ',' + this.position.Y + 'L' + this.parent.position.X + ',' + this.parent.position.Y });
+			this.position.X = newPos.x;
+			this.position.Y = newPos.y;
+			this.UpdatePosition();
+		}
+		
+		this.UpdateConnections = function() {
+			if(this.SVG.Connections) {
+				for(var i = 0; i < this.Parents.length; i++) {
+					//if(!Nodes[this.Parents[i]]) { console.log("Parent doesn't exists!"); continue; }
+					this.SVG.Connections[this.Parents[i]].attr({ path:'M' + this.position.X + ',' + this.position.Y + 'L' + Nodes[this.Parents[i]].position.X + ',' + Nodes[this.Parents[i]].position.Y });
+				}
+				for(var i = 0; i < this.Children.length; i++) {	
+					//if(!Nodes[this.Children[i]]) { console.log("Child doesn't exists!"); continue; }
+					Nodes[this.Children[i]].SVG.Connections[this.ID].attr({ path:'M' + this.position.X + ',' + this.position.Y + 'L' + Nodes[this.Children[i]].position.X + ',' + Nodes[this.Children[i]].position.Y });
+				}
 			}
 		}
 		this.UpdatePosition = function() {
-			if(AnimateNodeMovement)
-				this.SVG.Circle.animate({ cx: this.position.X, cy: this.position.Y }, 200);
-			else
-				this.SVG.Circle.attr({ cx: this.position.X, cy: this.position.Y });
 			
-			
+			this.SVG.Circle.attr({ cx: this.position.X, cy: this.position.Y });
+			this.SVG.Text.attr({ x: this.position.X + C.Radius + 15, y: this.position.Y });
+			//this.SVG.Date.attr({ x: this.position.X + C.Radius + 15, y: this.position.Y + 7 });
 			this.UpdateConnections();
 		}
 		
-		this.SetAvatar = function() {
-			this.SVG.Circle.animate({ 'fill':'url(url)' }, 1);
-		}
-		//this.SetAvatar();
+		this.InitSVG();
 	}
+	
 
-	Node.Add = function(x, y, Radius, parent, color) {
+	Node.Add = function(x, y, Radius, parents, color, id, title, user, date) {
 		var ret = {};
 		
 		var circle = Canvas.circle(x, y, Radius);
 		circle.attr('fill', 'rgba(240, 240, 240, 1)');
 		circle.attr('stroke', color);
 		circle.attr('stroke-width', C.Stroke);
+		circle.data('node-id', id); 
 		ret.Circle = circle;
+		ret.Connections = [];
 		
-		//circle.mouseover(function() { this.animate({ r: Radius * 1.2 }, 300, '<'); }).
-		//mouseout(function() { this.animate({ r: Radius }, 300); });
+		ret.Text = Canvas.text(x + C.Radius, y - 7, title + '\n' + date + ' \nby ' + user);
+		ret.Text.attr({ fill: '#fff', stroke: 'rgba(0, 0, 0, 0.2)', 'text-anchor': 'start', 'font-size': '8px' });
 		
-		if(parent) {
-			var path = Canvas.path('M' + x + ',' + y + 'L' + parent.position.X + ',' + parent.position.Y);
-			path.attr('stroke', 'rgba(240, 240, 240, 0.9)');
-			ret.Connection = path;
-		}
+		//ret.Date = Canvas.text(x + C.Radius, y + 7, date + ' by ' + user);
+		//ret.Date.attr({ fill: 'rgba(255,255,255,0.7)', stroke: 'rgba(0, 0, 0, 0.2)', 'text-anchor': 'start', 'font-size': '10px' });
 		return ret;
 	}
 
@@ -474,6 +600,10 @@
 	function ToggleReply() { $('#reply-wrapper').toggle(200); }
 
 	function Reply() {
+		if(submitted)
+			return;
+		
+		submitted = true;
 		var url = $('#admin-ajax-url').val();
 		var typename = $('select[name="knbu_type"] option[value="'+ $('select[name="knbu_type"]:first').val() + '"]').text();
 		$.post(url, { 
@@ -481,12 +611,16 @@
 			comment_knbu_type: $('select[name="knbu_type"]:first').val(),
 			comment_content: $('textarea[name="comment-content"]:first').val(),
 			comment_parent: $('#parent-comment-id').val(),
+			comment_title: $('#comment-title').val(),
 			action: 'knbu_new_reply'
 			}, function(response) {
-				//console.log(response);
-				/* Response data comes in JSON format */
-				response = JSON.parse(response);
 				
+				/* Response data comes in JSON format */
+				try {
+					response = JSON.parse(response);
+				} catch(e) {
+					console.log(response); 
+				}
 				if(response.Success) {
 					/* Add new node */
 					/* At this point the comment has been saved to the server */
@@ -496,13 +630,15 @@
 							SelectedNode.position.X + Math.random() * 50, 
 							SelectedNode.position.Y + Math.random() * 50), 
 						radius: C.Radius, 
-						parent: SelectedNode, 
+						parent: response.parent, 
 						content: response.content, 
 						type: response.knbu,
 						typeName: typename,
 						avatar: response.avatar,
 						username: response.username,
-						level: SelectedNode.level + 1
+						level: SelectedNode.level + 1,
+						date: response.date,
+						color: response.color
 					});
 					AddNode(n);
 					
@@ -511,6 +647,7 @@
 						$('select[name="knbu_type"]:first option:first').attr('selected', true);
 						$('textarea[name="comment-content"]:first').val('');
 						ToggleReply();
+						submitted = false;
 					});
 				}
 				else if(response.Message)
@@ -567,6 +704,11 @@
 			return Math.pow(v2.X - v1.X, 2) + Math.pow(v2.Y - v1.Y, 2);
 		}
 		Vector.Distance = function(v1, v2) { return Math.pow(Vector.DistanceSquared(v1, v2), 1/2); }
+	}
+	
+	function _dateformat(d) { 
+		d = new Date(d); 
+		return ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2) + ' ' + d.getDate() + '.' + (d.getMonth()+1) + '.' + d.getFullYear(); 
 	}
 	
 	/* Initialize module when document is ready */

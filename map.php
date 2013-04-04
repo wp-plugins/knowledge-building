@@ -2,24 +2,17 @@
 function knbu_get_knowledge_type_select() {
 	global $knbu_kbsets;
 	$value = '<select name="knbu_type">
-	<option>Select type</option>';
+	<option disabled selected>Select knowledge type</option>';
 	foreach($knbu_kbsets[knbu_get_kbset_for_post(get_the_ID())]->KnowledgeTypeSet->KnowledgeType as $type)
 		$value .= '<option value="'.$type['ID'].'">'.$type['Name'].'</option>';
 	$value .= '</select>';
 	return $value;
 }
 
-$Colors = [
-	'problem' => '#fcfc43',
-	'my_expl' => '#4ace93',
-	'sci_expl' => '#ffb42b',
-	'evaluation' => '#7e3cff',
-	'summary' => '#99d51a'
-];
 function knbu_get_legends() {
-	global $knbu_kbsets, $Colors;
+	global $knbu_kbsets;
 	foreach($knbu_kbsets[knbu_get_kbset_for_post(get_the_ID())]->KnowledgeTypeSet->KnowledgeType as $type) {
-		$color = isset($Colors[(string)$type['ID']]) ? $Colors[(string)$type['ID']] : '#ffffff';
+		$color = $type['Colour'];
 		echo '<li><span class="color" style="background-color: '.$color.'"></span>'.$type['Name'].'</li>';
 	}
 	echo '<li><span class="color" style="background-color: black"></span> Unspecified</li>';
@@ -29,8 +22,6 @@ $replies = get_comments(array(
 			'status' => 'approve',
 			'post_id' => get_the_ID()
 			));
-$knowledgeTypes = $wpdb->get_results('SELECT comment_id, kbtype FROM wp_knowledgetypes ORDER BY comment_id');
-
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -59,39 +50,38 @@ $knowledgeTypes = $wpdb->get_results('SELECT comment_id, kbtype FROM wp_knowledg
 		</ul>
 		</div>
 	</div>
+	
 	<div id="message">
 		<div class="message-header">
 			<h4 class="message-type"></h4>
 		</div>
 		<div class="message-content-wrapper">
-		<h3 class="message-username">Username</h3><div id="close">X</div>
-		<br style="clear:both">
-		<div class="message-meta">
-			<div class="message-avatar"></div>
-			<div class="message-date">6:43 pm 12th June 2013</div>
-		</div>
-		<div class="message-content-wrapper">
-			<div class="message-content"></div>
-		</div>
+			<h3 class="message-title"><span class="message-username">Username</span> <span class="message-date">6:43 pm 12th June 2013</span><div style="clear:both"></div></h3>
+			
+				<div class="message-meta">
+					<div class="message-avatar"></div>
+				</div>
+			<div class="message-content">
+			</div>
+			<div style="clear:both"></div>
 		<div class="message-coords"></div>
-		<br style="clear:both">
 		<?php if(is_user_logged_in()) { ?>
 		<a class="reply-toggle knbu-form-link" id="open-reply">Reply</a>
 		<div id="reply-wrapper">
 			<form>
 			<input type="hidden" value="<?php echo admin_url('admin-ajax.php'); ?>" id="admin-ajax-url">
 			<input type="hidden" value="<?php echo get_the_ID(); ?>" id="post-id">
-			<br style="clear:both">
 				<input type="hidden" name="parent-comment" id="parent-comment-id">
-				<p>Knowledge type <br><?php echo knbu_get_knowledge_type_select(); ?></p>
-				<p style="clear: both">Reply<br>
-				<textarea style="width: 95%" rows="8" name="comment-content"></textarea></p>
+				<p><!-- Title --> <input type="text" id="comment-title" placeholder="Title"> <!-- Knowledge type --> <?php echo knbu_get_knowledge_type_select(); ?></p>
+				<p style="clear: both"><!--Reply<br>-->
+				<textarea style="width: 95%" rows="8" name="comment-content" placeholder="Reply"></textarea></p>
 				<p><input type="button" value="Send" id="submit-reply" ></p>
 			</form>
 		</div>
 		<?php } else { ?>
 			<a href="<?php echo wp_login_url(); ?>" target="_top" class="reply-toggle knbu-form-link">Log in to reply</a>
 		<?php } ?>
+		<div style="clear:both"></div>
 		</div>
 	</div>
 		<?php
@@ -106,30 +96,36 @@ function knbu_get_childs($id, $replies) {
 	echo '<ul '.($id == 0 ? 'id="data" style="display: none"' : '').'
 	data-username="'.get_the_author_meta('display_name', $post->post_author).'" 
 	data-content="'.$post->post_content.'"
+	data-title="'.$post->post_title.'"
 	data-avatar="'.knbu_get_avatar_url( $post->user_id ).'"
 	data-username="'.get_the_author_meta( 'display_name', $post->user_id ).'"
 	data-email="'.$post->user_email.'"
+	data-date="'.date(get_option('date_format').' '.get_option('time_format'), strtotime($post->post_date)).'"
 	>';
 	foreach($replies as $reply) {
 		if($reply->comment_parent == $id) {		
 			$type = false;
 			$name = 'Unspecified';
-			foreach($knowledgeTypes as $kbtype) {
-				if($kbtype->comment_id == $reply->comment_ID) {
-					$type = $kbtype->kbtype;
-				}
-			}
+			$color = '#000';
+			$type = get_comment_meta($reply->comment_ID, 'kbtype', true);
 			
 			foreach($knbu_kbsets[knbu_get_kbset_for_post(get_the_ID())]->KnowledgeTypeSet->KnowledgeType as $t) {	
-				if($t['ID'] == $type) $name = $t['Name']; 
+				if($t['ID'] == $type) {
+					$name = $t['Name']; 
+					$color = $t['Colour'];
+				}
 			}
-			
+			$p = '';
 			echo '<li class="kbtype-'.$type.'" 
 			data-id="'.$reply->comment_ID.'"
 			data-kbtype="'.$type.'"
+			data-additional-parents="'.get_comment_meta($reply->comment_ID, 'knbu_map_additional_parents', true).$p.'"
 			data-kbname="'.$name.'"
 			data-username="'.get_the_author_meta('display_name', $reply->user_id).'"
 			data-content="'.$reply->comment_content.'"
+			data-date="'.date(get_option('date_format').' '.get_option('time_format'), strtotime($reply->comment_date)).'"
+			data-color="'.$color.'"
+			data-title="'.(strlen(get_comment_meta($reply->comment_ID, 'comment_title', true)) > 0 ? get_comment_meta($reply->comment_ID, 'comment_title', true) : '(no title)').'"
 			data-avatar="'.knbu_get_avatar_url($reply->user_id).'">';
 			knbu_get_childs($reply->comment_ID, $replies);
 			echo '</li>';
