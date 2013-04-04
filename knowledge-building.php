@@ -3,7 +3,7 @@
 Plugin Name: Knowledge Building
 Plugin URI: http://fle4.uiah.fi/kb-wp-plugin
 Description: Use post comment threads to facilitate meaningful knowledge building discussions. Comes with several knowledge type sets (eg. progressive inquiry, six hat thinking) that can be used to semantically tag comments, turning your Wordpress into a knowledge building environment. Especially useful in educational settings.
-Version: 0.6.1
+Version: 0.6.2
 Author: Tarmo Toikkanen, Antti Sandberg
 Author URI: http://tarmo.fi
 */
@@ -50,6 +50,7 @@ function knbu_upgrade_hook() {
  * Uses wp_cache to optimize performance.
  */
 $knbu_kbsets = wp_cache_get('knbu_kbsets');
+
 if ( $knbu_kbsets == false ) {
 	$knbu_kbsets = array();
 # Read available KBset xml files into memory
@@ -557,16 +558,15 @@ function knbu_new_reply_ajax() {
 		$var->username = get_the_author_meta('display_name', $var->user_id);
 		$var->user_email = get_the_author_meta('user_email', $var->user_id);
 		$data['user_id'] = $var->user_id;
-		$data['comment_author'] = $var->username;
 	}
 	else {
 		$var->user_email = $_POST['comment_user_email'];
 		$var->username = $_POST['comment_user_name'];
 		
 		$data['comment_author_email'] = $var->user_email;
-		$data['comment_author'] = $var->username;
 	}
 	
+	$data['comment_author'] = $var->username;
 	$id = wp_insert_comment($data);
 	$var->content = $_POST['comment_content'];
 	$var->comment_title = $_POST['comment_title'];
@@ -586,6 +586,7 @@ function knbu_new_reply_ajax() {
 	$var->color = (string)$ktype['Colour'];
 	
 	$var->date = get_comment_date(get_option('date_format'),$id);
+	$var->timestamp = strtotime(get_comment_date('Y-m-d H:i:s', $id));
 	echo json_encode($var);
 	die();
 }

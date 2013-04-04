@@ -186,6 +186,20 @@ div.kbtype-label {
 			padding: 0.4rem;
 		}
 	}
+	
+	#grouping {
+		position: absolute;
+		right: 20px;
+		top: 20px;
+		
+		a {
+			display: block;
+			padding: 7px;
+			text-align: right;
+			
+			cursor: pointer;
+		}
+	}
 
 	.knbu-form-link { 
 		margin-top: 10px; 

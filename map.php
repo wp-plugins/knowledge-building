@@ -11,6 +11,7 @@ function knbu_get_knowledge_type_select() {
 
 function knbu_get_legends() {
 	global $knbu_kbsets;
+	
 	foreach($knbu_kbsets[knbu_get_kbset_for_post(get_the_ID())]->KnowledgeTypeSet->KnowledgeType as $type) {
 		$color = $type['Colour'];
 		echo '<li><span class="color" style="background-color: '.$color.'"></span>'.$type['Name'].'</li>';
@@ -34,6 +35,14 @@ $replies = get_comments(array(
 	<div id="map">
 		<div id="raven"></div>
 		<div id="fps"></div>
+		<div id="grouping">
+			<ul>
+				<li><a id="grouping-byknowledgetypes">Group by knowledge types</a></li>
+				<li><a id="grouping-byauthors">Group by authors</a></li>
+				<li><a id="grouping-discussion">Discussion</a></li>
+				<li><a id="grouping-time">Time</a></li>
+			</ul>
+		</div>
 		<div id="navigation">
 			<div id="zoom"></div>
 			<div id="pan">
@@ -86,7 +95,6 @@ $replies = get_comments(array(
 				<p><input type="button" value="Send" id="submit-reply" ></p>
 			</form>
 		</div>
-		
 		<div style="clear:both"></div>
 		</div>
 	</div>
@@ -107,6 +115,7 @@ function knbu_get_childs($id, $replies) {
 	data-username="'.get_the_author_meta( 'display_name', $post->user_id ).'"
 	data-email="'.$post->user_email.'"
 	data-date="'.date(get_option('date_format').' '.get_option('time_format'), strtotime($post->post_date)).'"
+	data-timestamp="'.strtotime($post->post_date).'"
 	>';
 	foreach($replies as $reply) {
 		if($reply->comment_parent == $id) {		
@@ -127,9 +136,10 @@ function knbu_get_childs($id, $replies) {
 			data-kbtype="'.$type.'"
 			data-additional-parents="'.get_comment_meta($reply->comment_ID, 'knbu_map_additional_parents', true).$p.'"
 			data-kbname="'.$name.'"
-			data-username="'.get_the_author_meta('display_name', $reply->user_id).'"
+			data-username="'.$reply->comment_author.'"
 			data-content="'.$reply->comment_content.'"
 			data-date="'.date(get_option('date_format').' '.get_option('time_format'), strtotime($reply->comment_date)).'"
+			data-timestamp="'.strtotime($reply->comment_date).'"
 			data-color="'.$color.'"
 			data-title="'.(strlen(get_comment_meta($reply->comment_ID, 'comment_title', true)) > 0 ? get_comment_meta($reply->comment_ID, 'comment_title', true) : '(no title)').'"
 			data-avatar="'.knbu_get_avatar_url($reply->user_id).'">';
