@@ -5,7 +5,7 @@
 
 	var Canvas, ViewPort;
 	/* Working values: Repulse 15000, Attract 0.001 */
-	var C = { Radius: 14, Stroke: 8, Repulse: 15000 * 3, Attract: 0.001, Ignore_distance: 800 }
+	var C = { Radius: 17, Stroke: 8, Repulse: 15000 * 3, Attract: 0.001, Ignore_distance: 800 }
 	var mouseDown = false;
 	var mousePos;
 	var Nodes = [];
@@ -28,6 +28,7 @@
 	var AnimateNodeMovement = false;
 	var submitted = false;
 	var draggingNode = false;
+	var nodeDragged;
 	var tries = 0; 
 	var totalStart = 0;
 	var FirstNodeTime, LastNodeTime;
@@ -55,28 +56,8 @@
 		ViewPort.Y = 0;
 		OriginalViewPort = { x: ViewPort.X, y: ViewPort.Y, width: ViewPort.width, height: ViewPort.height }
 		
-		//Add the first element
-		var main = new Node({
-			id: 0, 
-			position: new Vector(Width/2, Height/2), 
-			radius: C.Radius * 1.5, 
-			parent: false, 
-			content: $('#data').attr('data-content'),
-			level: 0,
-			avatar: $('#data').attr('data-avatar'),
-			username: $('#data').attr('data-username'),
-			date: $('#data').attr('data-date'),
-			typeName: 'Start',
-			title: $('#data').attr('data-title'),
-			timestamp: $('#data').attr('data-timestamp')
-		});
-		
-		Nodes[0] = main;
-		//And make its position static
-		main.Static = true;
-		//Loop through the list
-		IterateChildren($('#data'), 1, main);
-		
+		for(var serverNode in NodesFromServer) 
+		{ Nodes[NodesFromServer[serverNode].id] = new Node(NodesFromServer[serverNode]); }
 		
 		for(var i in Nodes) { 
 			Nodes[i].SetParents();
@@ -100,7 +81,9 @@
 			KnowledgeTypes.push($(this).text());
 		});
 		
-		$('body').mouseup(function(){ draggingNode = false; });
+		$('body').
+		mouseup(function(){ draggingNode = false; }).
+		mouseleave(function() { releaseNode(); });
 		//Pan and Zoom mouse functionality
 		$('svg').
 			mousedown(function(e) { 
@@ -214,24 +197,6 @@
 			clearInterval(PanInterval);
 	}
 	
-	function StartNodeDrag(id) {
-		if(draggingNode) return;
-		
-		draggingNode = true;
-		
-		function _drag() {
-			
-			Nodes[id].ChangePosition(mousePos);
-			
-			ResetNodeUpdating();
-			
-			if(draggingNode)
-				setTimeout(_drag, 16);
-		}
-		
-		setTimeout(_drag, 16);
-	}
-	
 	function ResetNodeUpdating() {
 		tries = 0;
 		if(!calculating)
@@ -249,42 +214,7 @@
 		else
 			requestPositionsCalculating = true;
 	}
-
-	function IterateChildren(list, level, parent) {
-		if(list.is('ul')) {
-			list.children('li').each(function(i) {
-				var childCount = list.children('li').size();
-				if(parent)
-					var angle = Vector.Angle(parent.position, Nodes[0].position) + 180;
-				else
-					var angle = 360/childCount * i;
-					
-				var pos = Vector.Diag(30, (15/childCount) * i - 15/2 + angle);
-				pos.Add(parent.position);
-				var main = new Node({
-						id: $(this).attr('data-id'), 
-						position: new Vector(pos.X, pos.Y), 
-						radius: C.Radius, 
-						parent: parent.ID, 
-						content: $(this).attr('data-content'), 
-						type: $(this).attr('data-kbtype'),
-						typeName: $(this).attr('data-kbname'),
-						avatar: $(this).attr('data-avatar'),
-						username: $(this).attr('data-username'),
-						date: $(this).attr('data-date'),
-						timestamp: $(this).attr('data-timestamp'),
-						additionalParents: $(this).attr('data-additional-parents'),
-						color: $(this).attr('data-color'),
-						level: level,
-						title: $(this).attr('data-title')
-					});
-
-				Nodes[$(this).attr('data-id')] = main;
-				$(this).children('ul').each(function() { IterateChildren($(this), level + 1, main); });
-			});
-		}
-	}
-
+	
 	function CalculatePositions() {
 		
 		// Add nodes that are waiting to be added
@@ -328,7 +258,8 @@
 				
 				//Obviously we don't have to calculate forces "between" the same node.
 				if(i == j) continue;
-				if(Grouping == 'discussion') {
+				
+				if(Grouping == 'discussion' && !jNode.Anchor) {
 					//If the node is the another node's child calculate attractive force (child pulls its parent)
 					for(var parent in iNode.Parents) {
 						if(iNode.Parents[parent] == jNode.ID) {
@@ -344,8 +275,16 @@
 			switch(Grouping) {
 				case 'discussion': 
 					// Node's parent pulls the node
-					for(var parent in jNode.Parents) {
-						attractive.Add(AttractiveMovement(jNode.position, Nodes[jNode.Parents[parent]].position));
+					
+					if(jNode.Anchor) {
+						var v = AttractiveMovement(jNode.position, jNode.Anchor);
+						repulsive.Multiply(0.1);
+						v.Multiply(5);
+						attractive.Add(v);
+					} else {
+						for(var parent in jNode.Parents) {
+							attractive.Add(AttractiveMovement(jNode.position, Nodes[jNode.Parents[parent]].position));
+						}
 					}
 				break;
 				
@@ -412,9 +351,6 @@
 			setTimeout(CalculatePositions, 10);
 		else {
 			calculating = false;
-			
-			//for(var i = 0; i < Nodes.length; i++) 
-				//Nodes[i].UpdatePosition();
 				
 			$('#fps').text(Date.now() - totalStart);
 		}
@@ -463,8 +399,13 @@
 		this.ID = args.id;
 		this.Date = args.date;
 		this.parent = parseInt(args.parent);
-		this.position = args.position;
-		this.Radius = args.radius;
+		
+		if(args.anchor)
+			this.position = args.anchor;
+		else
+			this.position = new Vector(Width/2 + Math.random() * 2 - 1, Height/2 + Math.random() * 2 - 1);
+			
+		this.Radius = C.Radius;
 		this.Color = args.color;
 		this.TypeName = args.typeName;
 		this.Content = args.content;
@@ -475,6 +416,10 @@
 		this.Timestamp = args.timestamp;
 		this.movement = new Vector(0, 0);
 		this.Positions = [];
+		this.Static = args.static;
+
+		if(args.anchor && args.anchor.X && args.anchor.Y) 
+			this.Anchor = args.anchor;
 		
 		var node = this;
 		
@@ -522,12 +467,17 @@
 			function move(dx, dy) { 
 				if(node.Static) return;
 				
+				draggingNode = true;
+				nodeDragged = node.ID;
 				node.ChangePosition({ x: node.originalpos.x + dx * scale, y: node.originalpos.y + dy * scale }); 
 				ResetNodeUpdating();
 			}
 			
-			function stopdrag() { 
-				node.dragged = false; 
+			function stopdrag(e) { 
+				node.dragged = false;
+				
+				saveNodePosition(node, { X: node.SVG.Circle.attr('cx'), Y: node.SVG.Circle.attr('cy') });
+				node.Positions.splice(0, node.Positions.length);
 				ResetNodeUpdating(); 
 			}
 			
@@ -536,7 +486,11 @@
 				node.originalpos = { x: node.SVG.Circle.attrs.cx, y: node.SVG.Circle.attrs.cy };
 			}
 			
-			node.SVG.Circle.drag(move, startdrag, stopdrag);
+			this.initDrag = function() {
+				node.SVG.Circle.drag(move, startdrag, stopdrag);
+			}
+			
+			this.initDrag();
 			
 			/* Addtional parents disabled 
 			node.SVG.Circle.onDragOver(function(element) {
@@ -559,6 +513,7 @@
 				}
 				
 			});
+			
 			
 			/* Click events */
 			node.SVG.Circle.click(function(e) {
@@ -621,8 +576,7 @@
 			this.movement.Add(acceleration);
 			this.Positions.push(Vector.Add(this.position, this.movement));
 			
-			console.log(this.Positions);
-			while(this.Positions.length > 1)
+			while(this.Positions.length > 4)
 			{ this.Positions.shift(); }
 			
 			var sumX = 0, sumY = 0;
@@ -634,8 +588,6 @@
 			this.position.X = sumX / this.Positions.length;
 			this.position.Y = sumY / this.Positions.length;
 			
-			//this.position.X += this.movement.X;
-			//this.position.Y += this.movement.Y;
 			this.movement.Multiply(0.0);
 			if(update)
 				this.UpdatePosition();
@@ -671,7 +623,23 @@
 		this.InitSVG();
 	}
 	
-
+	
+	function releaseNode() {
+		if(!draggingNode) return;
+		
+		Nodes[nodeDragged].SVG.Circle.undrag();
+		Nodes[nodeDragged].initDrag();
+		Nodes[nodeDragged].Anchor = false;
+		
+		draggingNode = false;
+		Nodes[nodeDragged].dragged = false;
+		Nodes[nodeDragged].Positions.splice(0, Nodes[nodeDragged].Positions.length);
+		
+		saveNodePosition(Nodes[nodeDragged], false);
+		
+		nodeDragged = false;
+	}
+	
 	Node.Add = function(x, y, Radius, parents, color, id, title, user, date) {
 		var ret = {};
 		
@@ -836,6 +804,21 @@
 		$('#pan .down').mousedown(function() { NavigationButtons.Down = true; });
 		$('#pan .center').mousedown(ResetCanvasPosition);
 		$(window).mouseup(function() { NavigationButtons = {} }).mouseleave(function() { NavigationButtons = {} });
+	}
+	
+	function saveNodePosition(node, e) {
+		if(e)
+			node.Anchor = new Vector(e.X, e.Y);
+		else 
+			node.Anchor = false;
+		var url = $('#admin-ajax-url').val();
+		$.post(url, { 
+			id: node.ID,
+			node_position: JSON.stringify(e),
+			action: 'knbu_save_node_position'
+			}, function(response) {
+				
+			});
 	}
 	
 	function Vector(x, y) {

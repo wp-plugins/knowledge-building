@@ -1,5 +1,5 @@
  ===
-Contributors: tatti, spikefinned
+Contributors: tatti
 Donate link: http://fle4.uiah.fi/
 Tags: education, learning, knowledge building, progressive inquiry, comments, discussion, school
 Requires at least: 2.7
@@ -58,6 +58,9 @@ Either copy an existing typeset's XML file to a new name, and edit it to your li
 1. Demonstration of the progressive inquiry knowledge typeset in use on Wordpress.
 
 == Changelog ==
+
+=0.6.3=
+* Nodes can be dragged and pinned to different positions. Positions can be also reset by dragging nodes outside of the window.
 
 =0.6.2=
 * Sorting nodes by author, knowledge type or time
