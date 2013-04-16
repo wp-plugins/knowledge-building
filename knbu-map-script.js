@@ -5,12 +5,17 @@
 
 	var Canvas, ViewPort;
 	/* Working values: Repulse 15000, Attract 0.001 */
-	var C = { Radius: 17, Stroke: 8, Repulse: 15000 * 3, Attract: 0.001, Ignore_distance: 800 }
+	var C = { Radius: 17, RectWidth: 90, RectHeight:45, Stroke: 8, Repulse: 15000 * 50, Attract: 0.001, Ignore_distance: 800, RadiusIncreaseByUser: 30 }
 	var mouseDown = false;
 	var mousePos;
 	var Nodes = [];
 	var NodesWaiting = [];
 	var KnowledgeTypes = [];
+	var Origin;
+	var KnBuLabels;
+	var AuthorLabels;
+	
+	var RectSet, TextSet, PathSet;
 	
 	var NodeCount = 0;
 	var NodesPerKnowledgeType = [];
@@ -55,6 +60,7 @@
 		ViewPort.X = 0;
 		ViewPort.Y = 0;
 		OriginalViewPort = { x: ViewPort.X, y: ViewPort.Y, width: ViewPort.width, height: ViewPort.height }
+		Origin = { X: Width/2, Y: Height/2 };
 		
 		for(var serverNode in NodesFromServer) 
 		{ Nodes[NodesFromServer[serverNode].id] = new Node(NodesFromServer[serverNode]); }
@@ -76,10 +82,27 @@
 				
 			NodeCount++;
 		}
+		var attr = { "font-size": '20px', fill: 'white', "font-weight": "bold", "stroke": "rgba(0,0,0,0.1)", "stroke-width": 2 };
 		
+		
+		KnBuLabels = Canvas.set();
 		$('#legend > ul > li').each(function() {
-			KnowledgeTypes.push($(this).text());
+			if($(this).text() != 'Unspecified') {
+				var obj = Canvas.text(20, 20, $(this).text()).attr(attr);
+				
+				var v = Vector.Diag(500 + C.RadiusIncreaseByUser * $('#legend > ul > li').length, 360 * ($(this).index()/($('#legend > ul > li').length - 1)));
+				v.Add(Origin);
+				obj.attr({ x: v.X, y: v.Y });
+				
+				KnBuLabels.push(obj);
+				KnowledgeTypes.push({ 
+					text: $(this).text(), 
+					width: obj.node.getComputedTextLength(),
+					object: obj.attr({ opacity: 0 })
+				});
+			}
 		});
+		
 		
 		$('body').
 		mouseup(function(){ draggingNode = false; }).
@@ -114,7 +137,7 @@
 			
 		
 		/* Move connection lines before circles, so circles won't be under the lines. (Mouse events) */
-		$('#raven > svg > path').insertBefore('#raven > svg > circle:first');
+		$('#raven > svg > path').insertBefore('#raven > svg > rect:first');
 		
 		$('#close').click(function() { $('#message').hide(200); });
 		
@@ -137,12 +160,29 @@
 			NodesPerKnowledgeType[Nodes[i].TypeName]++;
 			
 			if(!NodesPerUser[Nodes[node].Username]) {
-				NodesPerUser[Nodes[node].Username] = 0;
+				NodesPerUser[Nodes[node].Username] = { c: 0 };
 				Users.push(Nodes[node].Username);
 			}
 			
-			NodesPerUser[Nodes[node].Username]++;
+			NodesPerUser[Nodes[node].Username].c++;
 		}
+		
+		AuthorLabels = Canvas.set();
+		var t = 0;
+		for(var user in NodesPerUser) {
+			
+			var v = Vector.Diag(500 + C.RadiusIncreaseByUser * Users.length, 360 * (t/Users.length));
+			v.Add(Origin);
+			
+			var obj = Canvas.text(20, 20, user).attr(attr);
+			obj.attr({ x: v.X, y: v.Y });
+			
+			NodesPerUser[user].width = obj.node.getComputedTextLength();
+			
+			AuthorLabels.push(obj);
+			t++;
+		}
+		AuthorLabels.attr({ opacity: 0 });
 		
 		// Set grouping controls
 		$('#grouping-discussion').click(function() { ChangeGrouping('discussion', this); });
@@ -150,8 +190,13 @@
 		$('#grouping-byknowledgetypes').click(function() { ChangeGrouping('knowledgetypes', this); });
 		$('#grouping-time').click(function() { ChangeGrouping('time', this); });
 		
+		$('#raven > svg > path').insertBefore('#raven > svg > rect:first');
+		
 		// Trigger node position calculations
 		ResetNodeUpdating();
+		
+		// Auto-open node
+		OpenLinkedNode();
 	}
 	
 	var NavigationButtons = { Left: false, Right: false, Up: false, Down: false };
@@ -161,6 +206,16 @@
 		$('#grouping > ul > li > a').css({ fontWeight: 'normal' });
 		$(element).css({ fontWeight: 'bolder' });
 		Grouping = grouping;
+		
+		if(grouping == 'knowledgetypes') 
+			KnBuLabels.animate({ opacity: 1.0 }, 500, 'linear');
+		else
+			KnBuLabels.animate({ opacity: 0.0 }, 500, 'linear');
+			
+		if(grouping == 'users') 
+			AuthorLabels.show().animate({ opacity: 1.0 }, 500, 'linear');
+		else
+			AuthorLabels.animate({ opacity: 0.0 }, 500, 'linear');
 		
 		if(Grouping != 'discussion') 
 			FadeConnections(0);
@@ -221,10 +276,10 @@
 		// Can't add in the middle of a loop
 		for(var i = 0; i < NodesWaiting.length; i++)
 			Nodes[NodesWaiting[i].ID] = NodesWaiting[i];
-			
+		
 		// Move connections under circles.
-		if(NodesWaiting.length > 0)
-			$('#raven > svg > path').insertBefore('#raven > svg > circle:first');
+		if(NodesWaiting.length > 0)		
+			$('#raven > svg > path').insertBefore('#raven > svg > rect:first');
 		
 		NodesWaiting = [];
 		requestPositionsCalculating = false;
@@ -269,7 +324,7 @@
 				}
 				
 				//Repulsive force
-				repulsive.Add(RepulsiveMovement(iNode, jNode));
+				repulsive.Add(RepulsiveMovement(iNode.position, jNode.position));
 			}
 				
 			switch(Grouping) {
@@ -290,12 +345,17 @@
 				
 				case 'knowledgetypes': 
 					for(var t = 0; t < KnowledgeTypes.length; t++) {
-						if(jNode.TypeName == KnowledgeTypes[t]) {
-							var v = new Vector(Width/2, Height/2);
-							
+						if(jNode.TypeName == KnowledgeTypes[t].text) {
 							// -1 because of the Unspecified type which should contain only the starting post.
-							v.Add(Vector.Diag(500, 360 * (t/(KnowledgeTypes.length - 1))));
-							attractive.Add(AttractiveMovement(jNode.position, v));
+							attractive.Add(AttractiveMovement(jNode.position, Vector.Diag(500 + C.RadiusIncreaseByUser * KnowledgeTypes.length, 360 * (t/(KnowledgeTypes.length)))));
+							
+							for(var x = 0; x < KnowledgeTypes[t].width; x += 20) {
+								var v = Vector.Diag(500 + C.RadiusIncreaseByUser * KnowledgeTypes.length, 360 * (t/(KnowledgeTypes.length)));
+								v.X -= KnowledgeTypes[t].width/2 - x;
+								var r = RepulsiveMovement(v, jNode.position);
+								r.Multiply(0.5);
+								repulsive.Add(r);
+							}
 							break;
 						}
 					}
@@ -305,10 +365,17 @@
 					var t = 0;
 					for(var user in NodesPerUser) {
 						if(jNode.Username == user) {
-							var v = new Vector(Width/2, Height/2);
+							attractive.Add(AttractiveMovement(jNode.position, Vector.Diag(500 + C.RadiusIncreaseByUser * Users.length, 360 * (t/(Users.length)))));
+				
 							
-							v.Add(Vector.Diag(500, 360 * (t/(Users.length))));
-							attractive.Add(AttractiveMovement(jNode.position, v));
+							for(var x = 0; x < NodesPerUser[user].width; x += 20) {
+								var v = Vector.Diag(500 + C.RadiusIncreaseByUser * Users.length, 360 * (t/(Users.length)));
+								v.X -= NodesPerUser[user].width/2 - x;
+								var r = RepulsiveMovement(v, jNode.position);
+								r.Multiply(0.1);
+								repulsive.Add(r);
+							}
+							
 							break;
 						}
 						t++;
@@ -316,12 +383,12 @@
 				break;
 				
 				case 'time': 
-					var v = new Vector(Width/2 - timebar * (1 - (jNode.Timestamp - FirstNodeTime) / timespan) + timebar/2, Height/2);
+					var v = new Vector(timebar * ((jNode.Timestamp - FirstNodeTime) / timespan), 0);
 					
 					attractive.Add(AttractiveMovement(jNode.position, v));
 					//repulsive.X *= 0.01;
 					repulsive.Multiply(0.1);
-					attractive.Y *= 0.01;
+					attractive.Y *= 0.1;
 				break;
 			}
 			
@@ -352,16 +419,16 @@
 		else {
 			calculating = false;
 				
-			$('#fps').text(Date.now() - totalStart);
+			//$('#fps').text(Date.now() - totalStart);
 		}
 	}
 
-	function RepulsiveMovement(node1, node2) {
+	function RepulsiveMovement(node1Pos, node2Pos) {
 		
-		var dist = Vector.DistanceSquared(node1.position, node2.position);
+		var dist = Vector.DistanceSquared(node1Pos, node2Pos);
 		if(dist > C.Ignore_distance * C.Ignore_distance) return new Vector(0, 0);
 		
-		var v = Vector.Subtract(node1.position, node2.position);
+		var v = Vector.Subtract(node1Pos, node2Pos);
 		v.Normalize();
 		
 		if(v.LengthSquared() == 0) {
@@ -374,7 +441,7 @@
 	}
 
 	function AttractiveMovement(node1Pos, node2Pos) {
-		
+	
 		// Attractive force
 		
 		var v = Vector.Subtract(node1Pos, node2Pos);
@@ -401,9 +468,11 @@
 		this.parent = parseInt(args.parent);
 		
 		if(args.anchor)
-			this.position = args.anchor;
+			this.position = { X: args.anchor.X, Y: args.anchor.Y };
+		else if(args.id == 0)
+			this.position = new Vector(0, 0);
 		else
-			this.position = new Vector(Width/2 + Math.random() * 2 - 1, Height/2 + Math.random() * 2 - 1);
+			this.position = new Vector(Math.random() * 2 - 1, Math.random() * 2 - 1);
 			
 		this.Radius = C.Radius;
 		this.Color = args.color;
@@ -419,7 +488,7 @@
 		this.Static = args.static;
 
 		if(args.anchor && args.anchor.X && args.anchor.Y) 
-			this.Anchor = args.anchor;
+			this.Anchor = { X: args.anchor.X, Y: args.anchor.Y };
 		
 		var node = this;
 		
@@ -445,8 +514,7 @@
 			path.attr('stroke', 'rgb(160,160,160)');
 			this.SVG.Connections[parent.ID] = path;
 			
-			/* Move connection lines before circles, so circles won't be under the lines. (Mouse events) */
-			$('#raven > svg > path').insertBefore('#raven > svg > circle:first');
+	
 		}
 		
 		this.InitSVG = function() { 
@@ -462,32 +530,34 @@
 				node.Username,
 				node.Date
 				); 
-			node.SVG.Circle.ID = node.ID;
+				
+			//node.SVG.Circle.ID = node.ID;
+			
 			/* Drag'n drop */
 			function move(dx, dy) { 
 				if(node.Static) return;
 				
 				draggingNode = true;
 				nodeDragged = node.ID;
-				node.ChangePosition({ x: node.originalpos.x + dx * scale, y: node.originalpos.y + dy * scale }); 
+				node.ChangePosition({ x: node.originalpos.x + dx * scale - Origin.X, y: node.originalpos.y + dy * scale - Origin.Y }); 
 				ResetNodeUpdating();
 			}
 			
 			function stopdrag(e) { 
 				node.dragged = false;
 				
-				saveNodePosition(node, { X: node.SVG.Circle.attr('cx'), Y: node.SVG.Circle.attr('cy') });
+				saveNodePosition(node, { X: node.SVG.Rect.attr('x') + node.SVG.Rect.attr('width')/2, Y: node.SVG.Rect.attr('y') + node.SVG.Rect.attr('height')/2 });
 				node.Positions.splice(0, node.Positions.length);
 				ResetNodeUpdating(); 
 			}
 			
 			function startdrag() {
 				node.dragged = true;
-				node.originalpos = { x: node.SVG.Circle.attrs.cx, y: node.SVG.Circle.attrs.cy };
+				node.originalpos = { x: node.SVG.Rect.attrs.x + node.SVG.Rect.attr('width')/2, y: node.SVG.Rect.attrs.y + node.SVG.Rect.attr('height')/2 };
 			}
 			
 			this.initDrag = function() {
-				node.SVG.Circle.drag(move, startdrag, stopdrag);
+				node.SVG.Set.drag(move, startdrag, stopdrag);
 			}
 			
 			this.initDrag();
@@ -500,7 +570,7 @@
 			});
 			*/
 			
-			node.SVG.Circle.mouseover(function() {
+			node.SVG.Set.mouseover(function() {
 				if(Grouping != 'discussion') {
 					FadeConnections(0);
 					for(var c in node.SVG.Connections) {
@@ -514,61 +584,11 @@
 				
 			});
 			
-			
 			/* Click events */
-			node.SVG.Circle.click(function(e) {
+			node.SVG.Set.click(function(e) {
 				if(Vector.DistanceSquared(mouseDownStart.position, { X: mousePos.x, Y: mousePos.y }) > 10 * 10 ) 
 					return;
-				
-				
-				//Shrink the old selected node to its normal size
-				if(SelectedNode)
-					SelectedNode.SVG.Circle.animate({ r: C.Radius }, 200);
-				
-				
-				//Select the selected node
-				SelectedNode = node;
-				SelectedNode.SVG.Circle.animate({ r: C.Radius * 1.5 }, 200);
-				
-				$('#parent-comment-id').val(SelectedNode.ID);
-			
-				//Set message data
-				var msg = $('#message');
-				msg.hide().find('.message-content').text(node.Content);
-				msg.find('.message-type').html(node.TypeName);
-				msg.find('.message-avatar').css({ backgroundImage: 'url(' + node.Avatar + ')' });
-				msg.find('.message-username').text(node.Username);
-				msg.find('.message-coords').text();
-				msg.find('.message-date').text(node.Date);
-				
-				//Get SVG element position relative to HTML document
-				var bounds = node.SVG.Circle.node.getBoundingClientRect();
-				
-				//Position the message box
-				var top, left;
-				if(bounds.left < Width/ 2)
-					left = bounds.right + 10; 
-				else
-					left = bounds.left - msg.width() - 10;
-					
-			
-				top = bounds.top + 10 - msg.height();
-					
-				if(left + msg.width() > Width)
-					left = Width - 50 - msg.width();
-				if(left < 0)
-					left = 10;
-				if(top + msg.height() > Height)
-					top = Height - 50 - msg.height();
-				if(top < 0)
-					top = 10;
-					
-				msg.css({ top: top, left: left });
-				
-				msg.find('.message-header').css({ backgroundColor: node.Color });
-				
-				
-				msg.show(200);
+				Node.Open(node);
 			});
 		}
 		
@@ -601,22 +621,24 @@
 		}
 		
 		this.UpdateConnections = function() {
+			var realPos = new Vector(this.position.X + Origin.X, this.position.Y + Origin.Y);
 			if(this.SVG.Connections) {
 				for(var i = 0; i < this.Parents.length; i++) {
 					//if(!Nodes[this.Parents[i]]) { console.log("Parent doesn't exists!"); continue; }
-					this.SVG.Connections[this.Parents[i]].attr({ path:'M' + this.position.X + ',' + this.position.Y + 'L' + Nodes[this.Parents[i]].position.X + ',' + Nodes[this.Parents[i]].position.Y });
+					this.SVG.Connections[this.Parents[i]].attr({ path:'M' + realPos.X + ',' + realPos.Y + 'L' + (Nodes[this.Parents[i]].position.X + Origin.X) + ',' + (Nodes[this.Parents[i]].position.Y + Origin.Y) });
 				}
 				for(var i = 0; i < this.Children.length; i++) {	
 					//if(!Nodes[this.Children[i]]) { console.log("Child doesn't exists!"); continue; }
-					Nodes[this.Children[i]].SVG.Connections[this.ID].attr({ path:'M' + this.position.X + ',' + this.position.Y + 'L' + Nodes[this.Children[i]].position.X + ',' + Nodes[this.Children[i]].position.Y });
+					Nodes[this.Children[i]].SVG.Connections[this.ID].attr({ path:'M' + realPos.X + ',' + realPos.Y + 'L' + (Nodes[this.Children[i]].position.X + Origin.X) + ',' + (Nodes[this.Children[i]].position.Y + Origin.Y) });
 				}
 			}
 		}
 		this.UpdatePosition = function() {
+			var realPos = new Vector(this.position.X + Origin.X, this.position.Y + Origin.Y);
 			
-			this.SVG.Circle.attr({ cx: this.position.X, cy: this.position.Y });
-			this.SVG.Text.attr({ x: this.position.X + C.Radius + 15, y: this.position.Y });
-			//this.SVG.Date.attr({ x: this.position.X + C.Radius + 15, y: this.position.Y + 7 });
+			this.SVG.Rect.attr({ x: realPos.X - this.SVG.Text.data('width')/2 - 10, y: realPos.Y - this.SVG.Text.data('height')/2 - 10 });
+			this.SVG.Text.attr({ x: realPos.X - this.SVG.Text.data('width')/2, y: realPos.Y });
+			
 			this.UpdateConnections();
 		}
 		
@@ -627,7 +649,7 @@
 	function releaseNode() {
 		if(!draggingNode) return;
 		
-		Nodes[nodeDragged].SVG.Circle.undrag();
+		Nodes[nodeDragged].SVG.Set.undrag();
 		Nodes[nodeDragged].initDrag();
 		Nodes[nodeDragged].Anchor = false;
 		
@@ -640,19 +662,98 @@
 		nodeDragged = false;
 	}
 	
+	Node.Open = function(node) {
+		//Shrink the old selected node to its normal size
+		//if(SelectedNode)
+		//SelectedNode.SVG.Circle.animate({ r: C.Radius }, 200);
+		
+		
+		//Select the selected node
+		SelectedNode = node;
+		//SelectedNode.SVG.Circle.animate({ r: C.Radius * 1.5 }, 200);
+		
+		$('#parent-comment-id').val(SelectedNode.ID);
+		
+		//Set message data
+		var msg = $('#message');
+		msg.hide().find('.message-content').text(node.Content);
+		msg.find('.message-type').html(node.TypeName);
+		msg.find('.message-avatar').attr({ src: node.Avatar });
+		msg.find('.message-username').text(node.Username);
+		msg.find('.message-date').text(node.Date);
+		msg.find('.message-title').text(node.Title);
+		msg.find('#message-link').attr({ 'href': '#' + node.ID }).text('#'+node.ID);
+		
+		//Get SVG element position relative to HTML document
+		var bounds = Node.getDocumentPosition(node);
+		
+		//Position the message box
+		var top, left;
+		if(bounds.left < Width/ 2)
+		left = bounds.right + 10; 
+		else
+		left = bounds.left - msg.width() - 10;
+		
+		
+		top = bounds.top + 10 - msg.height();
+		
+		if(left + msg.width() > Width)
+		left = Width - 50 - msg.width();
+		if(left < 0)
+		left = 10;
+		if(top + msg.height() > Height)
+		top = Height - 50 - msg.height();
+		if(top < 0)
+		top = 10;
+		
+		msg.css({ top: top, left: left });
+		
+		msg.css({ backgroundColor: node.Color });
+		
+		
+		msg.show(200);
+	}
+	
+	Node.getDocumentPosition = function(node) {
+		return node.SVG.Set[0].node.getBoundingClientRect(); 
+	}
+	
 	Node.Add = function(x, y, Radius, parents, color, id, title, user, date) {
 		var ret = {};
+		if(!color) { color = '#fff'; }
 		
+		if(title.length > 20) { 
+			var arr = title.split(' ');
+			arr[Math.floor(arr.length/2)] += '\n';
+			title = arr.join(' ');
+		}
+		
+		ret.Text = Canvas.text(x, y - 7, '#'+id + ' - ' + title + '\n' + date + ' \nby ' + user);
+		ret.Text.attr({ fill: '#000', 'text-anchor': 'start', 'font-size': '8px' });
+		var box = ret.Text.getBBox();
+		
+		var rect = Canvas.rect(x - box.width/2, y - box.height/2, box.width + 20, box.height + 20);
+		rect.attr('fill', color);
+		rect.data('node-id', id);
+		ret.Rect = rect;
+		ret.Text.attr({ x: 0 });
+		ret.Text.data('width', box.width);
+		ret.Text.data('height', box.height);
+		
+		ret.Set = Canvas.set();
+		ret.Set.push(ret.Text);
+		ret.Set.push(ret.Rect);
+		
+		/*
 		var circle = Canvas.circle(x, y, Radius);
 		circle.attr('fill', 'rgba(240, 240, 240, 1)');
 		circle.attr('stroke', color);
 		circle.attr('stroke-width', C.Stroke);
 		circle.data('node-id', id); 
 		ret.Circle = circle;
+		*/
+		rect.insertBefore(ret.Text);
 		ret.Connections = [];
-		
-		ret.Text = Canvas.text(x + C.Radius, y - 7, title + '\n' + date + ' \nby ' + user);
-		ret.Text.attr({ fill: '#fff', stroke: 'rgba(0, 0, 0, 0.2)', 'text-anchor': 'start', 'font-size': '8px' });
 		
 		//ret.Date = Canvas.text(x + C.Radius, y + 7, date + ' by ' + user);
 		//ret.Date.attr({ fill: 'rgba(255,255,255,0.7)', stroke: 'rgba(0, 0, 0, 0.2)', 'text-anchor': 'start', 'font-size': '10px' });
@@ -807,6 +908,9 @@
 	}
 	
 	function saveNodePosition(node, e) {
+		e.X -= Origin.X;
+		e.Y -= Origin.Y;
+		
 		if(e)
 			node.Anchor = new Vector(e.X, e.Y);
 		else 
@@ -845,6 +949,14 @@
 			return Math.pow(v2.X - v1.X, 2) + Math.pow(v2.Y - v1.Y, 2);
 		}
 		Vector.Distance = function(v1, v2) { return Math.pow(Vector.DistanceSquared(v1, v2), 1/2); }
+	}
+	
+	function OpenLinkedNode() {
+		var anchor = window.location.hash.replace('#', '');
+		
+		if(!isNaN(anchor) && anchor != "") {
+			Node.Open(Nodes[anchor]);
+		}
 	}
 	
 	/* Initialize module when document is ready */

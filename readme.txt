@@ -1,5 +1,5 @@
  ===
-Contributors: tatti
+Contributors: tatti, spikefinned
 Donate link: http://fle4.uiah.fi/
 Tags: education, learning, knowledge building, progressive inquiry, comments, discussion, school
 Requires at least: 2.7
@@ -15,6 +15,8 @@ Knowledge Building is a process of collaboratively building new understanding an
 This plugin is primarily meant for use in educational settings, but can of course be used for any meaningful purpose.
 
 This plugin uses the JQuery javascript library, and the jquery.simpledialog plugin for JQuery to streamline the user interface. JQuery is used in noconflict-mode, so this won't disturb a Wordpress installation that uses another javascript library as its default.
+
+For more regular updates see [GitHub](https://github.com/LeGroup/Fle4 "FLE4 GitHub page").
 
 == Installation ==
 
@@ -58,15 +60,6 @@ Either copy an existing typeset's XML file to a new name, and edit it to your li
 1. Demonstration of the progressive inquiry knowledge typeset in use on Wordpress.
 
 == Changelog ==
-
-=0.6.3=
-* Nodes can be dragged and pinned to different positions. Positions can be also reset by dragging nodes outside of the window.
-
-=0.6.2=
-* Sorting nodes by author, knowledge type or time
-
-=0.6.1=
-* Replies can be made anonymously
 
 =0.6=
 * A new map view introduced.
