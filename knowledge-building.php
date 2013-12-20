@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: Knowledge Building
-Plugin URI: http://fle4.uiah.fi/kb-wp-plugin
+Plugin URI: http://fle4.aalto.fi/kb-wp-plugin
 Description: Use post comment threads to facilitate meaningful knowledge building discussions. Comes with several knowledge type sets (eg. progressive inquiry, six hat thinking) that can be used to semantically tag comments, turning your Wordpress into a knowledge building environment. Especially useful in educational settings.
 Version: 0.7
 Author: Tarmo Toikkanen, Antti Sandberg
