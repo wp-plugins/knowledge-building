@@ -60,6 +60,12 @@ Either copy an existing typeset's XML file to a new name, and edit it to your li
 
 == Changelog ==
 
+=0.7.1=
+* Deprecation error fixed.
+
+=0.7=
+* Map view ready and optimized.
+
 =0.6=
 * A new map view introduced.
 

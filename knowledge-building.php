@@ -3,12 +3,12 @@
 Plugin Name: Knowledge Building
 Plugin URI: http://fle4.aalto.fi/kb-wp-plugin
 Description: Use post comment threads to facilitate meaningful knowledge building discussions. Comes with several knowledge type sets (eg. progressive inquiry, six hat thinking) that can be used to semantically tag comments, turning your Wordpress into a knowledge building environment. Especially useful in educational settings.
-Version: 0.7
+Version: 0.7.1
 Author: Tarmo Toikkanen, Antti Sandberg
 Author URI: http://tarmo.fi
 */
 
-/*  Copyright 2009-2013  Tarmo Toikkanen  (email : tarmo@iki.fi), Antti Sandberg (email : antti.sandberg@gmail.com)
+/*  Copyright 2009-2014  Tarmo Toikkanen  (email : tarmo@iki.fi), Antti Sandberg (email : antti.sandberg@gmail.com)
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -27,7 +27,7 @@ Author URI: http://tarmo.fi
 
 global $knbu_db_version;
 $knbu_db_version='0.12';
-$knbu_plugin_version = '0.7';
+$knbu_plugin_version = '0.7.1';
 
 add_action('init', 'knbu_init_mapview');
 add_action('wp_enqueue_scripts', 'knbu_enqueue_scripts');
@@ -79,7 +79,7 @@ if ( $knbu_kbsets == false ) {
 	$kbset_dir = __DIR__.DIRECTORY_SEPARATOR.'kbsets';
 	$d = dir($kbset_dir);
 	while ( false != ($entry = $d->read()) ) {
-		if ( ereg('\.xml$',strtolower($entry)) ) {
+		if ( preg_match('/\.xml$/i',$entry) ) {
 			$fname = explode('.',$entry);
 			$fname = $fname[0];
 			$knbu_kbsets[$fname]=simplexml_load_file($kbset_dir.DIRECTORY_SEPARATOR.$entry);
