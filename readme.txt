@@ -3,7 +3,7 @@ Contributors: tatti, spikefinned
 Donate link: http://fle4.aalto.fi/
 Tags: education, learning, knowledge building, progressive inquiry, comments, discussion, school
 Requires at least: 2.7
-Tested up to: 4.0
+Tested up to: 4.1
 Stable tag: 0.7.1
 
 Use comment threads to facilitate meaningful knowledge building discussions. Comes with several knowledge type sets (eg. progressive inquiry, six hat thinking) that can be used to semantically tag comments, turning your Wordpress into a knowledge building environment. Especially useful in educational settings.
